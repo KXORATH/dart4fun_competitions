@@ -2,12 +2,9 @@ import React from 'react';
 import { calculateGroupStandings } from '../lib/tournamentUtils';
 import { Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function GroupMatches({ groups, groupMatches, onUpdateMatch, onProceedToKnockout, onBack }) {
+export default function GroupMatches({ groups, groupMatches, onPlayMatch, onProceedToKnockout, onBack }) {
   
-  const handleScoreChange = (groupId, matchId, playerNum, value) => {
-    const num = value === '' ? null : parseInt(value, 10);
-    onUpdateMatch(groupId, matchId, playerNum, num);
-  };
+  // handleScoreChange removed since we use MatchView now
 
   const isAllMatchesFinished = () => {
     return Object.values(groupMatches).flat().every(m => m.isFinished);
@@ -88,22 +85,16 @@ export default function GroupMatches({ groups, groupMatches, onUpdateMatch, onPr
                     }}>
                       <div style={{ flex: 1, textAlign: 'right', paddingRight: '1rem', fontWeight: 'bold' }}>{m.player1.name}</div>
                       
-                      <div className="flex gap-2 items-center" style={{ width: '120px' }}>
-                        <input 
-                          type="number" 
-                          min="0"
-                          value={m.p1Legs !== null ? m.p1Legs : ''}
-                          onChange={(e) => handleScoreChange(group.id, m.id, 1, e.target.value)}
-                          style={{ padding: '0.25rem', textAlign: 'center', height: '36px' }}
-                        />
-                        <span>-</span>
-                        <input 
-                          type="number" 
-                          min="0"
-                          value={m.p2Legs !== null ? m.p2Legs : ''}
-                          onChange={(e) => handleScoreChange(group.id, m.id, 2, e.target.value)}
-                          style={{ padding: '0.25rem', textAlign: 'center', height: '36px' }}
-                        />
+                      <div className="flex gap-2 items-center justify-center" style={{ width: '120px' }}>
+                        {m.isFinished ? (
+                          <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent-color)' }}>
+                            {m.p1Legs} - {m.p2Legs}
+                          </div>
+                        ) : (
+                          <button onClick={() => onPlayMatch(group.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>
+                            Play Match
+                          </button>
+                        )}
                       </div>
 
                       <div style={{ flex: 1, paddingLeft: '1rem', fontWeight: 'bold' }}>{m.player2.name}</div>

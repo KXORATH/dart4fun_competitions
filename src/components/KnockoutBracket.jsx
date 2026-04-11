@@ -1,12 +1,9 @@
 import React from 'react';
 import { Trophy, ArrowLeft } from 'lucide-react';
 
-export default function KnockoutBracket({ matches, onUpdateMatch, winner, onRematch, onBack }) {
+export default function KnockoutBracket({ matches, onPlayMatch, winner, onRematch, onBack }) {
   
-  const handleScoreChange = (roundId, matchId, playerNum, value) => {
-    const num = value === '' ? null : parseInt(value, 10);
-    onUpdateMatch(roundId, matchId, playerNum, num);
-  };
+  // Score changes are now handled by MatchView
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -52,33 +49,22 @@ export default function KnockoutBracket({ matches, onUpdateMatch, winner, onRema
                       Waiting for players...
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {/* Player 1 Row */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 'bold' }}>{m.player1.name}</span>
-                        <input 
-                          type="number" 
-                          min="0"
-                          value={m.p1Legs !== null ? m.p1Legs : ''}
-                          onChange={(e) => handleScoreChange(round.id, m.id, 1, e.target.value)}
-                          style={{ width: '60px', padding: '0.25rem', textAlign: 'center' }}
-                        />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+                         <span style={{ fontWeight: 'bold' }}>{m.player1.name}</span>
+                         {m.isFinished && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p1Legs}</span>}
                       </div>
-                      
-                      {/* Divider */}
-                      <div style={{ height: '1px', background: 'var(--panel-border)', margin: '0.5rem 0' }}></div>
-                      
-                      {/* Player 2 Row */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 'bold' }}>{m.player2.name}</span>
-                        <input 
-                          type="number" 
-                          min="0"
-                          value={m.p2Legs !== null ? m.p2Legs : ''}
-                          onChange={(e) => handleScoreChange(round.id, m.id, 2, e.target.value)}
-                          style={{ width: '60px', padding: '0.25rem', textAlign: 'center' }}
-                        />
+                      <div style={{ height: '1px', background: 'var(--panel-border)', width: '100%', margin: '0.25rem 0' }}></div>
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+                         <span style={{ fontWeight: 'bold' }}>{m.player2.name}</span>
+                         {m.isFinished && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p2Legs}</span>}
                       </div>
+
+                      {!m.isFinished && (
+                        <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                          Play Match
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
