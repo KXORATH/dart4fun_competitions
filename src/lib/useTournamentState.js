@@ -98,14 +98,18 @@ export function useTournamentState() {
   const joinHost = (code) => {
     const peer = new Peer();
     
+    peer.on('error', (err) => {
+        console.error(err);
+        alert("Connection Error. Please check the code and try again.");
+    });
+
     peer.on('open', () => {
-      setPeerId(peer.id);
-      setIsHost(false);
+      const conn = peer.connect(code, { reliable: true });
       
-      const conn = peer.connect(code);
       conn.on('open', () => {
         hostConnRef.current = conn;
-        // The host will automatically send the state upon connecting
+        setIsHost(false);
+        setPeerId(code);
       });
 
       conn.on('data', (data) => {
@@ -117,6 +121,8 @@ export function useTournamentState() {
       conn.on('close', () => {
         alert("Lost connection to Host.");
         hostConnRef.current = null;
+        setPeerId(null);
+        setState(prev => ({ ...prev, phase: PHASES.LOBBY }));
       });
     });
 
