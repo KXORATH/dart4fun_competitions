@@ -19,7 +19,9 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
           value={settings.startingScore} 
           onChange={(e) => updateSetting('startingScore', parseInt(e.target.value, 10))}
         >
+          <option value={201}>201</option>
           <option value={301}>301</option>
+          <option value={401}>401</option>
           <option value={501}>501</option>
           <option value={701}>701</option>
         </select>
@@ -40,11 +42,27 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
 
       <div style={{ marginBottom: '2rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-          Match Format (Best of X Legs)
+          Group Stage Format (Best of X Legs)
         </label>
         <select 
           value={settings.bestOf} 
           onChange={(e) => updateSetting('bestOf', parseInt(e.target.value, 10))}
+        >
+          <option value={1}>Best of 1 (First to 1)</option>
+          <option value={3}>Best of 3 (First to 2)</option>
+          <option value={5}>Best of 5 (First to 3)</option>
+          <option value={7}>Best of 7 (First to 4)</option>
+          <option value={9}>Best of 9 (First to 5)</option>
+        </select>
+      </div>
+
+      <div style={{ marginBottom: '2rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+          Knockout Stage Format (Best of X Legs)
+        </label>
+        <select 
+          value={settings.knockoutBestOf} 
+          onChange={(e) => updateSetting('knockoutBestOf', parseInt(e.target.value, 10))}
         >
           <option value={1}>Best of 1 (First to 1)</option>
           <option value={3}>Best of 3 (First to 2)</option>

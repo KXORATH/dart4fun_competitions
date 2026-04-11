@@ -7,14 +7,19 @@ export default function StatsView({ players, globalHistory, onBack }) {
   const playerStats = players.map(player => {
       const pThrows = globalHistory.filter(h => h.playerId === player.id);
       
-      const totalScore = pThrows.reduce((sum, h) => sum + h.score, 0);
-      const numVisits = pThrows.length;
+      const scoreThrows = pThrows.filter(h => h.type !== 'LEG_WIN');
+      const legWins = pThrows.filter(h => h.type === 'LEG_WIN');
+      
+      const totalScore = scoreThrows.reduce((sum, h) => sum + h.score, 0);
+      const numVisits = scoreThrows.length;
       const average3Dart = numVisits > 0 ? (totalScore / numVisits).toFixed(2) : '0.00';
       
-      const sixtyPlus = pThrows.filter(h => h.score >= 60 && h.score < 100).length;
-      const tonPlus = pThrows.filter(h => h.score >= 100 && h.score < 140).length;
-      const tonFortyPlus = pThrows.filter(h => h.score >= 140 && h.score < 180).length;
-      const oneEighty = pThrows.filter(h => h.score === 180).length;
+      const sixtyPlus = scoreThrows.filter(h => h.score >= 60 && h.score < 100).length;
+      const tonPlus = scoreThrows.filter(h => h.score >= 100 && h.score < 140).length;
+      const tonFortyPlus = scoreThrows.filter(h => h.score >= 140 && h.score < 180).length;
+      const oneEighty = scoreThrows.filter(h => h.score === 180).length;
+      
+      const minDarts = legWins.length > 0 ? Math.min(...legWins.map(w => w.numDarts)) : '-';
       
       return {
           id: player.id,
@@ -24,7 +29,8 @@ export default function StatsView({ players, globalHistory, onBack }) {
           sixtyPlus,
           tonPlus,
           tonFortyPlus,
-          oneEighty
+          oneEighty,
+          minDarts
       };
   });
 
@@ -52,6 +58,7 @@ export default function StatsView({ players, globalHistory, onBack }) {
               <th style={{ padding: '1rem' }}>100+</th>
               <th style={{ padding: '1rem' }}>140+</th>
               <th style={{ padding: '1rem', color: 'var(--accent-color)' }}>180</th>
+              <th style={{ padding: '1rem', color: 'var(--success-color)' }}>Best Leg</th>
             </tr>
           </thead>
           <tbody>
@@ -64,11 +71,12 @@ export default function StatsView({ players, globalHistory, onBack }) {
                 <td style={{ padding: '1rem' }}>{p.tonPlus}</td>
                 <td style={{ padding: '1rem' }}>{p.tonFortyPlus}</td>
                 <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 'bold' }}>{p.oneEighty}</td>
+                <td style={{ padding: '1rem', color: 'var(--success-color)', fontWeight: 'bold' }}>{p.minDarts}{p.minDarts !== '-' ? ' darts' : ''}</td>
               </tr>
             ))}
             {playerStats.length === 0 && (
                 <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                         No darts have been thrown yet!
                     </td>
                 </tr>

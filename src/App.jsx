@@ -257,7 +257,7 @@ function App() {
         {phase === PHASES.MATCH_VIEW && activeMatch && (
           <MatchView
             match={getActiveMatchData()}
-            settings={settings}
+            settings={{ ...settings, bestOf: activeMatch.type === 'knockout' ? settings.knockoutBestOf : settings.bestOf }}
             onMatchFinish={handleMatchFinish}
             onBack={() => setPhase(activeMatch.type === 'group' ? PHASES.GROUP_STAGE : PHASES.KNOCKOUT_STAGE)}
           />

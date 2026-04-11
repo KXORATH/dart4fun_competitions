@@ -19,7 +19,7 @@ const INITIAL_STATE = {
   groupMatches: {},
   knockouts: [],
   winner: null,
-  settings: { startingScore: 501, checkoutType: 'double', bestOf: 3 },
+  settings: { startingScore: 501, checkoutType: 'double', bestOf: 3, knockoutBestOf: 3 },
   globalHistory: [],
   activeMatch: null // { type: 'group' | 'knockout', roundId?, matchId }
 };

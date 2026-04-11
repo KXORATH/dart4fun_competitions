@@ -14,6 +14,9 @@ export default function MatchView({ match, settings, onMatchFinish, onBack }) {
   const [history, setHistory] = useState([]);
   const [legHistory, setLegHistory] = useState([]); // to track states for Undo
   
+  const [p1Visits, setP1Visits] = useState(0);
+  const [p2Visits, setP2Visits] = useState(0);
+  
   const legsToWin = Math.ceil(settings.bestOf / 2);
   
   // Numpad input handler
@@ -51,7 +54,13 @@ export default function MatchView({ match, settings, onMatchFinish, onBack }) {
     }
 
     // Save previous state to history
-    setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer }]);
+    setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits }]);
+
+    const newP1Visits = currentPlayer === 1 ? p1Visits + 1 : p1Visits;
+    const newP2Visits = currentPlayer === 2 ? p2Visits + 1 : p2Visits;
+    
+    if (currentPlayer === 1) setP1Visits(newP1Visits);
+    else setP2Visits(newP2Visits);
 
     // Record the throw stats
     setHistory(prev => [...prev, {
@@ -61,6 +70,11 @@ export default function MatchView({ match, settings, onMatchFinish, onBack }) {
     }]);
 
     if (wonLeg) {
+        setHistory(prev => [...prev, {
+            playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
+            type: 'LEG_WIN',
+            numDarts: (currentPlayer === 1 ? newP1Visits : newP2Visits) * 3
+        }]);
         handleLegWin(currentPlayer);
     } else {
         if (!isBust) {
@@ -86,6 +100,8 @@ export default function MatchView({ match, settings, onMatchFinish, onBack }) {
           // Next leg
           setP1Score(settings.startingScore);
           setP2Score(settings.startingScore);
+          setP1Visits(0);
+          setP2Visits(0);
           setLegHistory([]);
           // Alternate who starts the next leg
           const totalLegsPlayed = newP1Legs + newP2Legs;
@@ -99,6 +115,8 @@ export default function MatchView({ match, settings, onMatchFinish, onBack }) {
       setP1Score(lastState.p1Score);
       setP2Score(lastState.p2Score);
       setCurrentPlayer(lastState.currentPlayer);
+      setP1Visits(lastState.p1Visits);
+      setP2Visits(lastState.p2Visits);
       
       setLegHistory(prev => prev.slice(0, -1));
       setHistory(prev => prev.slice(0, -1));
