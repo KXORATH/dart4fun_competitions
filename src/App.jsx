@@ -247,6 +247,7 @@ function App() {
             groupMatches={groupMatches}
             onUpdateMatch={handleUpdateGroupMatch}
             onProceedToKnockout={startKnockouts}
+            onBack={() => setPhase(PHASES.SETUP_GROUPS)}
           />
         )}
 
@@ -256,6 +257,7 @@ function App() {
             onUpdateMatch={handleUpdateKnockoutMatch}
             winner={winner}
             onRematch={handleRematch}
+            onBack={() => setPhase(PHASES.GROUP_STAGE)}
           />
         )}
       </main>

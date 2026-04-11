@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, ArrowLeft } from 'lucide-react';
 
-export default function KnockoutBracket({ matches, onUpdateMatch, winner, onRematch }) {
+export default function KnockoutBracket({ matches, onUpdateMatch, winner, onRematch, onBack }) {
   
   const handleScoreChange = (roundId, matchId, playerNum, value) => {
     const num = value === '' ? null : parseInt(value, 10);
@@ -10,7 +10,13 @@ export default function KnockoutBracket({ matches, onUpdateMatch, winner, onRema
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Knockout Stage</h2>
+      <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <button className="secondary" onClick={onBack}>
+          <ArrowLeft size={18} /> Back
+        </button>
+        <h2 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Knockout Stage</h2>
+        <div style={{ width: '80px' }}></div>
+      </div>
 
       {winner && (
         <div className="glass-panel" style={{ 

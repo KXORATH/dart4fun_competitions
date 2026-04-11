@@ -40,7 +40,7 @@ export default function PlayerEntry({ players, setPlayers, onNext }) {
         </h3>
         {players.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'center', padding: '2rem 0' }}>
-            No players added yet. Add at least 4 players to start.
+            No players added yet. Add at least 3 players to start.
           </p>
         ) : (
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -67,7 +67,7 @@ export default function PlayerEntry({ players, setPlayers, onNext }) {
       </div>
 
       <div className="flex" style={{ justifyContent: 'center' }}>
-        <button onClick={onNext} disabled={players.length < 4}>
+        <button onClick={onNext} disabled={players.length < 3}>
           Proceed to Group Setup <ArrowRight size={18} />
         </button>
       </div>

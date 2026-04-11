@@ -1,8 +1,8 @@
 import React from 'react';
 import { calculateGroupStandings } from '../lib/tournamentUtils';
-import { Trophy, ArrowRight } from 'lucide-react';
+import { Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function GroupMatches({ groups, groupMatches, onUpdateMatch, onProceedToKnockout }) {
+export default function GroupMatches({ groups, groupMatches, onUpdateMatch, onProceedToKnockout, onBack }) {
   
   const handleScoreChange = (groupId, matchId, playerNum, value) => {
     const num = value === '' ? null : parseInt(value, 10);
@@ -16,7 +16,10 @@ export default function GroupMatches({ groups, groupMatches, onUpdateMatch, onPr
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h2>Group Stage</h2>
+        <button className="secondary" onClick={onBack}>
+          <ArrowLeft size={18} /> Back
+        </button>
+        <h2 style={{ margin: 0 }}>Group Stage</h2>
         <button 
           onClick={onProceedToKnockout} 
           disabled={!isAllMatchesFinished()}
