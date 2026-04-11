@@ -20,6 +20,7 @@ export default function StatsView({ players, globalHistory, onBack }) {
       const oneEighty = scoreThrows.filter(h => h.score === 180).length;
       
       const minDarts = legWins.length > 0 ? Math.min(...legWins.map(w => w.numDarts)) : '-';
+      const highestCheckout = legWins.length > 0 ? Math.max(...legWins.map(w => w.checkout || 0)) : '-';
       
       return {
           id: player.id,
@@ -30,7 +31,8 @@ export default function StatsView({ players, globalHistory, onBack }) {
           tonPlus,
           tonFortyPlus,
           oneEighty,
-          minDarts
+          minDarts,
+          highestCheckout
       };
   });
 
@@ -59,6 +61,7 @@ export default function StatsView({ players, globalHistory, onBack }) {
               <th style={{ padding: '1rem' }}>140+</th>
               <th style={{ padding: '1rem', color: 'var(--accent-color)' }}>180</th>
               <th style={{ padding: '1rem', color: 'var(--success-color)' }}>Best Leg</th>
+              <th style={{ padding: '1rem', color: 'var(--danger-color)' }}>High Checkout</th>
             </tr>
           </thead>
           <tbody>
@@ -72,11 +75,12 @@ export default function StatsView({ players, globalHistory, onBack }) {
                 <td style={{ padding: '1rem' }}>{p.tonFortyPlus}</td>
                 <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 'bold' }}>{p.oneEighty}</td>
                 <td style={{ padding: '1rem', color: 'var(--success-color)', fontWeight: 'bold' }}>{p.minDarts}{p.minDarts !== '-' ? ' darts' : ''}</td>
+                <td style={{ padding: '1rem', color: 'var(--danger-color)', fontWeight: 'bold' }}>{p.highestCheckout}</td>
               </tr>
             ))}
             {playerStats.length === 0 && (
                 <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                         No darts have been thrown yet!
                     </td>
                 </tr>

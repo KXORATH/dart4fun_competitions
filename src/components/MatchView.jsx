@@ -73,7 +73,8 @@ export default function MatchView({ match, settings, onMatchFinish, onBack }) {
         setHistory(prev => [...prev, {
             playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
             type: 'LEG_WIN',
-            numDarts: (currentPlayer === 1 ? newP1Visits : newP2Visits) * 3
+            numDarts: (currentPlayer === 1 ? newP1Visits : newP2Visits) * 3,
+            checkout: scoreVal
         }]);
         handleLegWin(currentPlayer);
     } else {
