@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateRoundRobin } from '../lib/tournamentUtils';
 
 export default function GroupSetup({ players, onBack, onGroupsCreated }) {
-  const [numGroups, setNumGroups] = useState(2);
+  const [numGroups, setNumGroups] = useState(1);
 
-  const maxGroups = Math.floor(players.length / 2); // At least 2 players per group
+  const maxGroups = Math.max(1, Math.floor(players.length / 3)); // At least 3 players per group
 
   const handleCreateGroups = () => {
     // Shuffle players

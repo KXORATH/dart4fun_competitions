@@ -5,10 +5,16 @@ export function generateRoundRobin(players) {
   
   for (let i = 0; i < numPlayers; i++) {
     for (let j = i + 1; j < numPlayers; j++) {
+      const potentialJudges = players.filter(p => p.id !== players[i].id && p.id !== players[j].id);
+      const judge = potentialJudges.length > 0 
+        ? potentialJudges[Math.floor(Math.random() * potentialJudges.length)] 
+        : null;
+
       matches.push({
         id: `m_${matchId++}`,
         player1: players[i],
         player2: players[j],
+        judge: judge,
         p1Legs: null,
         p2Legs: null,
         isFinished: false

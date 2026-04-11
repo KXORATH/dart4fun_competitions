@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trophy } from 'lucide-react';
 
-export default function KnockoutBracket({ matches, onUpdateMatch, winner }) {
+export default function KnockoutBracket({ matches, onUpdateMatch, winner, onRematch }) {
   
   const handleScoreChange = (roundId, matchId, playerNum, value) => {
     const num = value === '' ? null : parseInt(value, 10);
@@ -23,6 +23,9 @@ export default function KnockoutBracket({ matches, onUpdateMatch, winner }) {
           <Trophy size={64} color="#fbbf24" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ margin: 0, color: '#fbbf24' }}>Tournament Champion</h2>
           <h1 style={{ fontSize: '3rem', margin: '1rem 0' }}>{winner.name}</h1>
+          <button onClick={onRematch} style={{ marginTop: '1rem', background: '#fbbf24', color: '#000' }}>
+            Start Another Tournament
+          </button>
         </div>
       )}
 
@@ -34,7 +37,11 @@ export default function KnockoutBracket({ matches, onUpdateMatch, winner }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'center', flex: 1 }}>
               {round.matches.map(m => (
                 <div key={m.id} className="glass-panel" style={{ padding: '1rem', position: 'relative' }}>
-                  {!m.player1 || !m.player2 ? (
+                  {m.isBye ? (
+                    <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--success-color)', fontWeight: 'bold' }}>
+                      {m.player1.name} (Bye)
+                    </div>
+                  ) : !m.player1 || !m.player2 ? (
                     <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>
                       Waiting for players...
                     </div>

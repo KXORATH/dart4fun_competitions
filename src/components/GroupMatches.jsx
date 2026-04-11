@@ -73,35 +73,43 @@ export default function GroupMatches({ groups, groupMatches, onUpdateMatch, onPr
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {matches.map(m => (
                   <div key={m.id} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
                     background: 'rgba(0,0,0,0.2)',
                     padding: '0.5rem',
                     borderRadius: '8px',
                     border: '1px solid var(--panel-border)'
                   }}>
-                    <div style={{ flex: 1, textAlign: 'right', paddingRight: '1rem', fontWeight: 'bold' }}>{m.player1.name}</div>
-                    
-                    <div className="flex gap-2 items-center" style={{ width: '120px' }}>
-                      <input 
-                        type="number" 
-                        min="0"
-                        value={m.p1Legs !== null ? m.p1Legs : ''}
-                        onChange={(e) => handleScoreChange(group.id, m.id, 1, e.target.value)}
-                        style={{ padding: '0.25rem', textAlign: 'center', height: '36px' }}
-                      />
-                      <span>-</span>
-                      <input 
-                        type="number" 
-                        min="0"
-                        value={m.p2Legs !== null ? m.p2Legs : ''}
-                        onChange={(e) => handleScoreChange(group.id, m.id, 2, e.target.value)}
-                        style={{ padding: '0.25rem', textAlign: 'center', height: '36px' }}
-                      />
-                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between'
+                    }}>
+                      <div style={{ flex: 1, textAlign: 'right', paddingRight: '1rem', fontWeight: 'bold' }}>{m.player1.name}</div>
+                      
+                      <div className="flex gap-2 items-center" style={{ width: '120px' }}>
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={m.p1Legs !== null ? m.p1Legs : ''}
+                          onChange={(e) => handleScoreChange(group.id, m.id, 1, e.target.value)}
+                          style={{ padding: '0.25rem', textAlign: 'center', height: '36px' }}
+                        />
+                        <span>-</span>
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={m.p2Legs !== null ? m.p2Legs : ''}
+                          onChange={(e) => handleScoreChange(group.id, m.id, 2, e.target.value)}
+                          style={{ padding: '0.25rem', textAlign: 'center', height: '36px' }}
+                        />
+                      </div>
 
-                    <div style={{ flex: 1, paddingLeft: '1rem', fontWeight: 'bold' }}>{m.player2.name}</div>
+                      <div style={{ flex: 1, paddingLeft: '1rem', fontWeight: 'bold' }}>{m.player2.name}</div>
+                    </div>
+                    {m.judge && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.5rem' }}>
+                        ⚖️ Judge: {m.judge.name}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

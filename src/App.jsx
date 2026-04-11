@@ -42,45 +42,67 @@ function App() {
   };
 
   const generateKnockoutMatches = (advancingPlayers) => {
-    // Basic logic for creating matches. We'll support Semi/Final logic dynamically based on length
-    // advancingPlayers is an array of player objects
-    
-    // Shuffle slightly to avoid predictable brackets if groups were unbalanced
-    // But ideal is 1st vs 2nd, which we did in our collection logic
-    
     let rounds = [];
-    let currentPlayers = advancingPlayers;
-    let roundIndex = 0;
-
-    // Build the initial round (e.g., Semis if 4 players, Quarters if 8)
+    
+    // Calculate P (next power of 2)
+    const N = advancingPlayers.length;
+    let P = 1;
+    while(P < N) P *= 2;
+    
+    const byes = P - N;
     const initialMatches = [];
-    for (let i = 0; i < currentPlayers.length; i += 2) {
-      initialMatches.push({
-        id: uuidv4(),
-        player1: currentPlayers[i],
-        player2: currentPlayers[i + 1] || null, // bye if odd
-        p1Legs: null,
-        p2Legs: null,
-        isFinished: false,
-        winner: null
-      });
+    
+    let playerIndex = 0;
+    const numInitialMatches = P / 2;
+    
+    for (let i = 0; i < numInitialMatches; i++) {
+        if (i < byes) {
+            // Bye match
+            const p1 = advancingPlayers[playerIndex++];
+            initialMatches.push({
+                id: uuidv4(),
+                player1: p1,
+                player2: null,
+                p1Legs: null,
+                p2Legs: null,
+                isFinished: true,
+                winner: p1,
+                isBye: true
+            });
+        } else {
+            // Normal match
+            const p1 = advancingPlayers[playerIndex++];
+            const p2 = advancingPlayers[playerIndex++];
+            initialMatches.push({
+                id: uuidv4(),
+                player1: p1,
+                player2: p2,
+                p1Legs: null,
+                p2Legs: null,
+                isFinished: false,
+                winner: null,
+                isBye: false
+            });
+        }
     }
 
-    let numMatches = initialMatches.length;
-    let roundName = 'Round of ' + currentPlayers.length;
-    if (currentPlayers.length === 4) roundName = 'Semi Finals';
-    if (currentPlayers.length === 2) roundName = 'Final';
+    let roundName = 'Round of ' + P;
+    if (P === 8) roundName = 'Quarter Finals';
+    if (P === 4) roundName = 'Semi Finals';
+    if (P === 2) roundName = 'Final';
     
+    let roundIndex = 0;
     rounds.push({
       id: `r_${roundIndex}`,
       name: roundName,
       matches: initialMatches
     });
+
+    let numMatches = numInitialMatches;
     
-    // Pre-calculate empty following rounds
     while (numMatches > 1) {
       roundIndex++;
-      numMatches = Math.ceil(numMatches / 2);
+      numMatches = numMatches / 2;
       const nextMatches = [];
       for(let i=0; i<numMatches; i++) {
         nextMatches.push({
@@ -90,11 +112,13 @@ function App() {
           p1Legs: null,
           p2Legs: null,
           isFinished: false,
-          winner: null
+          winner: null,
+          isBye: false
         });
       }
       
-      let nName = 'Round';
+      let nName = 'Round of ' + (numMatches * 2);
+      if (numMatches === 4) nName = 'Quarter Finals';
       if (numMatches === 2) nName = 'Semi Finals';
       if (numMatches === 1) nName = 'Final';
       
@@ -104,6 +128,16 @@ function App() {
         matches: nextMatches
       });
     }
+
+    // Propagate byes to round 2
+    initialMatches.forEach((m, idx) => {
+        if(m.isBye && rounds.length > 1) {
+            const nextRound = rounds[1];
+            const nextMatchIndex = Math.floor(idx / 2);
+            const nextPlayerPos = idx % 2 === 0 ? 'player1' : 'player2';
+            nextRound.matches[nextMatchIndex][nextPlayerPos] = m.winner;
+        }
+    });
 
     return rounds;
   };
@@ -175,10 +209,18 @@ function App() {
     });
   };
 
+  const handleRematch = () => {
+    setGroups([]);
+    setGroupMatches({});
+    setKnockouts([]);
+    setWinner(null);
+    setPhase(PHASES.SETUP_GROUPS);
+  };
+
   return (
     <>
       <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ margin: 0 }}>Dart Tournament Manager</h1>
+        <h1 style={{ margin: 0 }}>Dart4fun Competitions</h1>
         <p style={{ color: 'var(--text-secondary)' }}>Manage your competition with ease.</p>
       </header>
 
@@ -213,6 +255,7 @@ function App() {
             matches={knockouts}
             onUpdateMatch={handleUpdateKnockoutMatch}
             winner={winner}
+            onRematch={handleRematch}
           />
         )}
       </main>
