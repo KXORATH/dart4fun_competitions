@@ -28,46 +28,58 @@ export function useTournamentState() {
   const [state, setState] = useState(INITIAL_STATE);
   const [peerId, setPeerId] = useState(null);
   const [isHost, setIsHost] = useState(false);
-  const [connections, setConnections] = useState([]);
-  
+  const [connectionsCount, setConnectionsCount] = useState(0);
+
   const peerRef = useRef(null);
-  const hostConnRef = useRef(null); // If we are a client, this is our connection to the host
+  const hostConnRef = useRef(null);   // client -> host connection
+  const connectionsRef = useRef([]);  // host -> all client connections (always up-to-date)
+  const isHostRef = useRef(false);    // mirror of isHost, always up-to-date inside callbacks
+
+  // Keep isHostRef in sync whenever isHost changes
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
+
+  const broadcastToClients = (payload) => {
+    connectionsRef.current.forEach(conn => {
+      if (conn.open) conn.send({ type: 'STATE_UPDATE', payload });
+    });
+  };
 
   const updateState = (updater) => {
     setState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
-      
-      // Broadcast state change across network
-      if (isHost) {
-        // Send to all connected clients
-        connections.forEach(conn => {
-          if (conn.open) conn.send({ type: 'STATE_UPDATE', payload: next });
-        });
+
+      if (isHostRef.current) {
+        // We are the host — broadcast to all clients
+        broadcastToClients(next);
       } else if (hostConnRef.current && hostConnRef.current.open) {
-        // We are a client, send our new state to the host.
-        // The host will then adopt it and rebroadcast it.
+        // We are a client — send our new state to the host; host will re-broadcast
         hostConnRef.current.send({ type: 'STATE_UPDATE', payload: next });
       }
-      
+
       return next;
     });
   };
 
   const initHost = () => {
-    // Generate a random 5 char code for Room Code
     const code = 'DART-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     const peer = new Peer(code);
-    
+
     peer.on('open', (id) => {
       setPeerId(id);
       setIsHost(true);
+      isHostRef.current = true;
       updateState({ phase: PHASES.SETUP_PLAYERS });
     });
 
     peer.on('connection', (conn) => {
       conn.on('open', () => {
-        setConnections(prev => [...prev, conn]);
-        // Send current state to new client immediately
+        // Add to ref immediately so future broadcasts include this client
+        connectionsRef.current = [...connectionsRef.current, conn];
+        setConnectionsCount(connectionsRef.current.length);
+
+        // Send current state to the newly connected client
         setState(current => {
           conn.send({ type: 'STATE_UPDATE', payload: current });
           return current;
@@ -76,19 +88,17 @@ export function useTournamentState() {
 
       conn.on('data', (data) => {
         if (data.type === 'STATE_UPDATE') {
-          setState(data.payload); // adopt client state
-          // Re-broadcast to other clients
-          setConnections(prev => {
-            prev.filter(c => c.peer !== conn.peer && c.open).forEach(c => {
-               c.send({ type: 'STATE_UPDATE', payload: data.payload });
-            });
-            return prev;
-          });
+          // Adopt client state and rebroadcast to everyone else
+          setState(data.payload);
+          connectionsRef.current
+            .filter(c => c.peer !== conn.peer && c.open)
+            .forEach(c => c.send({ type: 'STATE_UPDATE', payload: data.payload }));
         }
       });
-      
+
       conn.on('close', () => {
-        setConnections(prev => prev.filter(c => c.peer !== conn.peer));
+        connectionsRef.current = connectionsRef.current.filter(c => c.peer !== conn.peer);
+        setConnectionsCount(connectionsRef.current.length);
       });
     });
 
@@ -97,18 +107,19 @@ export function useTournamentState() {
 
   const joinHost = (code) => {
     const peer = new Peer();
-    
+
     peer.on('error', (err) => {
-        console.error(err);
-        alert("Connection Error. Please check the code and try again.");
+      console.error(err);
+      alert('Connection Error. Please check the code and try again.');
     });
 
     peer.on('open', () => {
       const conn = peer.connect(code, { reliable: true });
-      
+
       conn.on('open', () => {
         hostConnRef.current = conn;
         setIsHost(false);
+        isHostRef.current = false;
         setPeerId(code);
       });
 
@@ -117,9 +128,9 @@ export function useTournamentState() {
           setState(data.payload);
         }
       });
-      
+
       conn.on('close', () => {
-        alert("Lost connection to Host.");
+        alert('Lost connection to Host.');
         hostConnRef.current = null;
         setPeerId(null);
         setState(prev => ({ ...prev, phase: PHASES.LOBBY }));
@@ -136,6 +147,6 @@ export function useTournamentState() {
     isHost,
     initHost,
     joinHost,
-    connectionsCount: connections.length
+    connectionsCount,
   };
 }
