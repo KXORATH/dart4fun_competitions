@@ -135,7 +135,8 @@ function App() {
           if (matchIndex >= 0) {
               const m = newGroupsMatches[gId][matchIndex];
               // Update state mutably because spread allows it simply here
-              newGroupsMatches[gId][matchIndex] = { ...m, p1Legs, p2Legs, isFinished: true };
+              const { liveState, ...matchWithoutLiveState } = m;
+              newGroupsMatches[gId][matchIndex] = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
           }
       } else if (activeMatch.type === 'knockout') {
           returnPhase = PHASES.KNOCKOUT_STAGE;
@@ -143,7 +144,8 @@ function App() {
           const rIndex = newKnockouts.findIndex(r => r.id === roundId);
           const mIndex = newKnockouts[rIndex].matches.findIndex(m => m.id === matchId);
           
-          let m = { ...newKnockouts[rIndex].matches[mIndex], p1Legs, p2Legs, isFinished: true };
+          const { liveState, ...matchWithoutLiveState } = newKnockouts[rIndex].matches[mIndex];
+          let m = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
           m.winner = m.p1Legs > m.p2Legs ? m.player1 : m.player2;
           newKnockouts[rIndex].matches[mIndex] = m;
           
@@ -169,6 +171,45 @@ function App() {
           activeMatch: null,
           phase: returnPhase
       });
+  };
+
+  const handleMatchLiveUpdate = (liveState) => {
+    if (!activeMatch) return;
+
+    if (activeMatch.type === 'group') {
+      const gId = activeMatch.groupId;
+      const matches = groupMatches[gId];
+      if (!matches) return;
+
+      const matchIndex = matches.findIndex(m => m.id === activeMatch.matchId);
+      if (matchIndex < 0) return;
+
+      const updatedGroupMatches = {
+        ...groupMatches,
+        [gId]: matches.map((m, idx) => idx === matchIndex ? { ...m, liveState } : m)
+      };
+
+      updateState({ groupMatches: updatedGroupMatches });
+      return;
+    }
+
+    if (activeMatch.type === 'knockout') {
+      const { roundId, matchId } = activeMatch;
+      const roundIndex = knockouts.findIndex(r => r.id === roundId);
+      if (roundIndex < 0) return;
+
+      const matchIndex = knockouts[roundIndex].matches.findIndex(m => m.id === matchId);
+      if (matchIndex < 0) return;
+
+      const updatedRound = {
+        ...knockouts[roundIndex],
+        matches: knockouts[roundIndex].matches.map((m, idx) => idx === matchIndex ? { ...m, liveState } : m)
+      };
+      const updatedKnockouts = [...knockouts];
+      updatedKnockouts[roundIndex] = updatedRound;
+
+      updateState({ knockouts: updatedKnockouts });
+    }
   };
 
   const getActiveMatchData = () => {
@@ -259,6 +300,7 @@ function App() {
             match={getActiveMatchData()}
             settings={{ ...settings, bestOf: activeMatch.type === 'knockout' ? settings.knockoutBestOf : settings.bestOf }}
             onMatchFinish={handleMatchFinish}
+            onLiveUpdate={handleMatchLiveUpdate}
             onBack={() => setPhase(activeMatch.type === 'group' ? PHASES.GROUP_STAGE : PHASES.KNOCKOUT_STAGE)}
           />
         )}
