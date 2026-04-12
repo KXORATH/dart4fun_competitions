@@ -1,37 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, X, Undo } from 'lucide-react';
 
-export default function MatchView({ match, settings, onMatchFinish, onBack }) {
-  const [p1Legs, setP1Legs] = useState(match.p1Legs || 0);
-  const [p2Legs, setP2Legs] = useState(match.p2Legs || 0);
+export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate, onBack }) {
+  const [p1Legs, setP1Legs] = useState(match.liveState?.p1Legs ?? match.p1Legs ?? 0);
+  const [p2Legs, setP2Legs] = useState(match.liveState?.p2Legs ?? match.p2Legs ?? 0);
   
-  const [p1Score, setP1Score] = useState(settings.startingScore);
-  const [p2Score, setP2Score] = useState(settings.startingScore);
+  const [p1Score, setP1Score] = useState(match.liveState?.p1Score ?? settings.startingScore);
+  const [p2Score, setP2Score] = useState(match.liveState?.p2Score ?? settings.startingScore);
   
-  const [currentPlayer, setCurrentPlayer] = useState(1);
-  const [inputValue, setInputValue] = useState('');
+  const [currentPlayer, setCurrentPlayer] = useState(match.liveState?.currentPlayer ?? 1);
+  const [inputValue, setInputValue] = useState(match.liveState?.inputValue ?? '');
   
-  const [history, setHistory] = useState([]);
-  const [legHistory, setLegHistory] = useState([]); // to track states for Undo
+  const [history, setHistory] = useState(match.liveState?.history ?? []);
+  const [legHistory, setLegHistory] = useState(match.liveState?.legHistory ?? []); // to track states for Undo
   
-  const [p1Visits, setP1Visits] = useState(0);
-  const [p2Visits, setP2Visits] = useState(0);
+  const [p1Visits, setP1Visits] = useState(match.liveState?.p1Visits ?? 0);
+  const [p2Visits, setP2Visits] = useState(match.liveState?.p2Visits ?? 0);
+  const lastRemoteSnapshotRef = useRef(null);
+  const hasLocalChangeRef = useRef(false);
   
   const legsToWin = Math.ceil(settings.bestOf / 2);
+
+  useEffect(() => {
+    if (!match.liveState) return;
+    hasLocalChangeRef.current = false;
+    lastRemoteSnapshotRef.current = JSON.stringify(match.liveState);
+    setP1Legs(match.liveState.p1Legs);
+    setP2Legs(match.liveState.p2Legs);
+    setP1Score(match.liveState.p1Score);
+    setP2Score(match.liveState.p2Score);
+    setCurrentPlayer(match.liveState.currentPlayer);
+    setInputValue(match.liveState.inputValue);
+    setHistory(match.liveState.history);
+    setLegHistory(match.liveState.legHistory);
+    setP1Visits(match.liveState.p1Visits);
+    setP2Visits(match.liveState.p2Visits);
+  }, [match.liveState]);
+
+  useEffect(() => {
+    const snapshot = {
+      p1Legs,
+      p2Legs,
+      p1Score,
+      p2Score,
+      currentPlayer,
+      inputValue,
+      history,
+      legHistory,
+      p1Visits,
+      p2Visits
+    };
+    const serializedSnapshot = JSON.stringify(snapshot);
+    if (!hasLocalChangeRef.current) return;
+    if (serializedSnapshot === lastRemoteSnapshotRef.current) return;
+    onLiveUpdate(snapshot);
+    hasLocalChangeRef.current = false;
+    lastRemoteSnapshotRef.current = serializedSnapshot;
+  }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, onLiveUpdate]);
   
   // Numpad input handler
   const handleInput = (val) => {
     if (inputValue.length < 3) {
+      hasLocalChangeRef.current = true;
       setInputValue(prev => prev + val);
     }
   };
 
   const handleBackspace = () => {
+    hasLocalChangeRef.current = true;
     setInputValue(prev => prev.slice(0, -1));
   };
 
   const handleEnter = () => {
     if (inputValue === '') return;
+    hasLocalChangeRef.current = true;
     const scoreVal = parseInt(inputValue, 10);
     if (scoreVal > 180 || scoreVal < 0) {
         alert("Invalid score (must be 0-180)");
@@ -112,6 +154,7 @@ export default function MatchView({ match, settings, onMatchFinish, onBack }) {
 
   const handleUndo = () => {
       if (legHistory.length === 0) return;
+      hasLocalChangeRef.current = true;
       const lastState = legHistory[legHistory.length - 1];
       setP1Score(lastState.p1Score);
       setP2Score(lastState.p2Score);
