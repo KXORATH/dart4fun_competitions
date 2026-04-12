@@ -120,9 +120,6 @@ function App() {
   };
 
   const handleMatchFinish = (p1Legs, p2Legs, matchHistory) => {
-      // 1. Process match data back into brackets
-      // 2. Append history
-      // 3. Go back to previous view
       let newGroupsMatches = { ...groupMatches };
       let newKnockouts = [...knockouts];
       let newWinner = winner;
@@ -134,7 +131,6 @@ function App() {
           const matchIndex = newGroupsMatches[gId].findIndex(m => m.id === activeMatch.matchId);
           if (matchIndex >= 0) {
               const m = newGroupsMatches[gId][matchIndex];
-              // Update state mutably because spread allows it simply here
               const { liveState, ...matchWithoutLiveState } = m;
               newGroupsMatches[gId][matchIndex] = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
           }
@@ -149,7 +145,6 @@ function App() {
           m.winner = m.p1Legs > m.p2Legs ? m.player1 : m.player2;
           newKnockouts[rIndex].matches[mIndex] = m;
           
-          // Propagate winner
           if (rIndex + 1 < newKnockouts.length) {
               const nextRoundMatch = { ...newKnockouts[rIndex + 1] };
               const nextMatches = [...nextRoundMatch.matches];
@@ -173,50 +168,55 @@ function App() {
       });
   };
 
+  // updateState is now stable (useCallback with no deps in useTournamentState),
+  // so this callback won't be recreated on every render — breaking the update loop
   const handleMatchLiveUpdate = useCallback((liveState) => {
-    if (!activeMatch) return;
+    updateState(prev => {
+      const { activeMatch } = prev;
+      if (!activeMatch) return prev;
 
-    if (activeMatch.type === 'group') {
-      const gId = activeMatch.groupId;
-      const matches = groupMatches[gId];
-      if (!matches) return;
+      if (activeMatch.type === 'group') {
+        const gId = activeMatch.groupId;
+        const matches = prev.groupMatches[gId];
+        if (!matches) return prev;
 
-      const matchIndex = matches.findIndex(m => m.id === activeMatch.matchId);
-      if (matchIndex < 0) return;
+        const matchIndex = matches.findIndex(m => m.id === activeMatch.matchId);
+        if (matchIndex < 0) return prev;
 
-      const currentMatch = matches[matchIndex];
-      if (JSON.stringify(currentMatch.liveState || null) === JSON.stringify(liveState || null)) return;
+        if (JSON.stringify(matches[matchIndex].liveState ?? null) === JSON.stringify(liveState)) return prev;
 
-      const updatedGroupMatches = {
-        ...groupMatches,
-        [gId]: matches.map((m, idx) => idx === matchIndex ? { ...m, liveState } : m)
-      };
+        return {
+          ...prev,
+          groupMatches: {
+            ...prev.groupMatches,
+            [gId]: matches.map((m, idx) => idx === matchIndex ? { ...m, liveState } : m)
+          }
+        };
+      }
 
-      updateState({ groupMatches: updatedGroupMatches });
-      return;
-    }
+      if (activeMatch.type === 'knockout') {
+        const { roundId, matchId } = activeMatch;
+        const roundIndex = prev.knockouts.findIndex(r => r.id === roundId);
+        if (roundIndex < 0) return prev;
 
-    if (activeMatch.type === 'knockout') {
-      const { roundId, matchId } = activeMatch;
-      const roundIndex = knockouts.findIndex(r => r.id === roundId);
-      if (roundIndex < 0) return;
+        const matchIndex = prev.knockouts[roundIndex].matches.findIndex(m => m.id === matchId);
+        if (matchIndex < 0) return prev;
 
-      const matchIndex = knockouts[roundIndex].matches.findIndex(m => m.id === matchId);
-      if (matchIndex < 0) return;
+        if (JSON.stringify(prev.knockouts[roundIndex].matches[matchIndex].liveState ?? null) === JSON.stringify(liveState)) return prev;
 
-      const currentMatch = knockouts[roundIndex].matches[matchIndex];
-      if (JSON.stringify(currentMatch.liveState || null) === JSON.stringify(liveState || null)) return;
+        const updatedKnockouts = prev.knockouts.map((round, rIdx) =>
+          rIdx !== roundIndex ? round : {
+            ...round,
+            matches: round.matches.map((m, mIdx) => mIdx !== matchIndex ? m : { ...m, liveState })
+          }
+        );
 
-      const updatedRound = {
-        ...knockouts[roundIndex],
-        matches: knockouts[roundIndex].matches.map((m, idx) => idx === matchIndex ? { ...m, liveState } : m)
-      };
-      const updatedKnockouts = [...knockouts];
-      updatedKnockouts[roundIndex] = updatedRound;
+        return { ...prev, knockouts: updatedKnockouts };
+      }
 
-      updateState({ knockouts: updatedKnockouts });
-    }
-  }, [activeMatch, groupMatches, knockouts, updateState]);
+      return prev;
+    });
+  }, [updateState]);
 
   const getActiveMatchData = () => {
       if (!activeMatch) return null;
@@ -237,7 +237,6 @@ function App() {
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {/* Peer connection HUD */}
           {peerId && (
               <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem' }}>
                 <div style={{ color: 'var(--text-secondary)' }}>{isHost ? 'Room Code' : 'Connected to Room'}</div>
