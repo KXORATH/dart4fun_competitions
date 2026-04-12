@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateGroupStandings } from './lib/tournamentUtils';
 import { useTournamentState, PHASES } from './lib/useTournamentState';
@@ -14,7 +14,7 @@ import StatsView from './components/StatsView';
 
 function App() {
   const { state, updateState, peerId, isHost, initHost, joinHost, connectionsCount } = useTournamentState();
-  const { phase, players, groups, groupMatches, knockouts, winner, settings, globalHistory, activeMatch } = state;
+  const { phase, players, groups, groupMatches, knockouts, winner, settings, globalHistory, activeMatch, liveMatchStates } = state;
 
   const setPhase = (newPhase) => updateState({ phase: newPhase });
 
@@ -108,7 +108,7 @@ function App() {
   };
 
   const handleRematch = () => {
-    updateState({ groups: [], groupMatches: {}, knockouts: [], winner: null, globalHistory: [], phase: PHASES.SETUP_GROUPS });
+    updateState({ groups: [], groupMatches: {}, knockouts: [], winner: null, globalHistory: [], liveMatchStates: {}, phase: PHASES.SETUP_GROUPS });
   };
 
   const handlePlayGroupMatch = (groupId, matchId) => {
@@ -161,23 +161,45 @@ function App() {
           }
       }
 
+      const updatedLiveMatchStates = { ...liveMatchStates };
+      if (activeMatch?.matchId) {
+        delete updatedLiveMatchStates[activeMatch.matchId];
+      }
+
       updateState({
           groupMatches: newGroupsMatches,
           knockouts: newKnockouts,
           winner: newWinner,
           globalHistory: [...globalHistory, ...matchHistory],
+          liveMatchStates: updatedLiveMatchStates,
           activeMatch: null,
           phase: returnPhase
       });
   };
 
+  const handleMatchLiveUpdate = useCallback((liveState) => {
+    if (!activeMatch?.matchId) return;
+    if (JSON.stringify(liveMatchStates[activeMatch.matchId] || null) === JSON.stringify(liveState || null)) return;
+    updateState({
+      liveMatchStates: {
+        ...liveMatchStates,
+        [activeMatch.matchId]: liveState
+      }
+    });
+  }, [activeMatch, liveMatchStates, updateState]);
+
   const getActiveMatchData = () => {
       if (!activeMatch) return null;
       if (activeMatch.type === 'group') {
-          return groupMatches[activeMatch.groupId].find(m => m.id === activeMatch.matchId);
+          const match = groupMatches[activeMatch.groupId].find(m => m.id === activeMatch.matchId);
+          if (!match) return null;
+          return { ...match, liveState: liveMatchStates[activeMatch.matchId] };
       } else {
           const round = knockouts.find(r => r.id === activeMatch.roundId);
-          return round.matches.find(m => m.id === activeMatch.matchId);
+          if (!round) return null;
+          const match = round.matches.find(m => m.id === activeMatch.matchId);
+          if (!match) return null;
+          return { ...match, liveState: liveMatchStates[activeMatch.matchId] };
       }
   };
 
@@ -259,6 +281,7 @@ function App() {
             match={getActiveMatchData()}
             settings={{ ...settings, bestOf: activeMatch.type === 'knockout' ? settings.knockoutBestOf : settings.bestOf }}
             onMatchFinish={handleMatchFinish}
+            onLiveUpdate={handleMatchLiveUpdate}
             onBack={() => setPhase(activeMatch.type === 'group' ? PHASES.GROUP_STAGE : PHASES.KNOCKOUT_STAGE)}
           />
         )}

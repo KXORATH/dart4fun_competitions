@@ -21,7 +21,8 @@ const INITIAL_STATE = {
   winner: null,
   settings: { startingScore: 501, checkoutType: 'double', bestOf: 3, knockoutBestOf: 3 },
   globalHistory: [],
-  activeMatch: null // { type: 'group' | 'knockout', roundId?, matchId }
+  activeMatch: null, // { type: 'group' | 'knockout', roundId?, matchId }
+  liveMatchStates: {} // { [matchId]: { p1Score, p2Score, ... } }
 };
 
 export function useTournamentState() {
