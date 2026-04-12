@@ -41,20 +41,26 @@ export function useTournamentState() {
 
   // updateState is stable (no deps) — always reads fresh values from refs
   const updateState = useCallback((updater) => {
-    setState(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+  setState(prev => {
+    const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
 
-      if (isHostRef.current) {
-        connectionsRef.current.forEach(conn => {
-          if (conn.open) conn.send({ type: 'STATE_UPDATE', payload: next });
-        });
-      } else if (hostConnRef.current && hostConnRef.current.open) {
-        hostConnRef.current.send({ type: 'STATE_UPDATE', payload: next });
-      }
+    // TYMCZASOWE LOGI - usuń po naprawieniu
+    console.log('[updateState] isHost:', isHostRef.current, '| connections:', connectionsRef.current.length, '| hostConn open:', hostConnRef.current?.open);
 
-      return next;
-    });
-  }, []);
+    if (isHostRef.current) {
+      connectionsRef.current.forEach(conn => {
+        if (conn.open) conn.send({ type: 'STATE_UPDATE', payload: next });
+      });
+    } else if (hostConnRef.current && hostConnRef.current.open) {
+      console.log('[updateState] Sending to host...');
+      hostConnRef.current.send({ type: 'STATE_UPDATE', payload: next });
+    } else {
+      console.warn('[updateState] NICZEGO NIE WYSŁANO!');
+    }
+
+    return next;
+  });
+}, []);
 
   const initHost = useCallback(() => {
     const code = 'DART-' + Math.random().toString(36).substring(2, 6).toUpperCase();
