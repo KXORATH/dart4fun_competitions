@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, X, Undo } from 'lucide-react';
 
 export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate, onBack }) {
+  console.log('[MatchView] render, match.id:', match?.id, 'onLiveUpdate type:', typeof onLiveUpdate);
+
   const [p1Legs, setP1Legs] = useState(match.liveState?.p1Legs ?? match.p1Legs ?? 0);
   const [p2Legs, setP2Legs] = useState(match.liveState?.p2Legs ?? match.p2Legs ?? 0);
   
@@ -12,7 +14,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const [inputValue, setInputValue] = useState(match.liveState?.inputValue ?? '');
   
   const [history, setHistory] = useState(match.liveState?.history ?? []);
-  const [legHistory, setLegHistory] = useState(match.liveState?.legHistory ?? []); // to track states for Undo
+  const [legHistory, setLegHistory] = useState(match.liveState?.legHistory ?? []);
   
   const [p1Visits, setP1Visits] = useState(match.liveState?.p1Visits ?? 0);
   const [p2Visits, setP2Visits] = useState(match.liveState?.p2Visits ?? 0);
@@ -21,6 +23,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const legsToWin = Math.ceil(settings.bestOf / 2);
 
   useEffect(() => {
+    console.log('[MatchView] liveState effect uruchomiony, liveState:', match.liveState ? 'jest' : 'brak');
     if (!match.liveState) return;
     lastRemoteSnapshotRef.current = JSON.stringify(match.liveState);
     setP1Legs(match.liveState.p1Legs);
@@ -49,12 +52,20 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       p2Visits
     };
     const serializedSnapshot = JSON.stringify(snapshot);
-    if (serializedSnapshot === lastRemoteSnapshotRef.current) return;
+
+    console.log('[MatchView] onLiveUpdate effect uruchomiony');
+    console.log('[MatchView] snapshot === lastRemote?', serializedSnapshot === lastRemoteSnapshotRef.current);
+
+    if (serializedSnapshot === lastRemoteSnapshotRef.current) {
+      console.log('[MatchView] snapshot bez zmian, pomijam onLiveUpdate');
+      return;
+    }
+
+    console.log('[MatchView] wywołuję onLiveUpdate, p1Score:', p1Score, 'p2Score:', p2Score);
     onLiveUpdate(snapshot);
     lastRemoteSnapshotRef.current = serializedSnapshot;
   }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, onLiveUpdate]);
   
-  // Numpad input handler
   const handleInput = (val) => {
     if (inputValue.length < 3) {
       setInputValue(prev => prev + val);
@@ -66,6 +77,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   };
 
   const handleEnter = () => {
+    console.log('[handleEnter] kliknięto Submit, inputValue:', inputValue);
     if (inputValue === '') return;
     const scoreVal = parseInt(inputValue, 10);
     if (scoreVal > 180 || scoreVal < 0) {
@@ -88,7 +100,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         wonLeg = true;
     }
 
-    // Save previous state to history
+    console.log('[handleEnter] currentScore:', currentScore, 'newScore:', newScore, 'isBust:', isBust, 'wonLeg:', wonLeg);
+
     setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits }]);
 
     const newP1Visits = currentPlayer === 1 ? p1Visits + 1 : p1Visits;
@@ -97,7 +110,6 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     if (currentPlayer === 1) setP1Visits(newP1Visits);
     else setP2Visits(newP2Visits);
 
-    // Record the throw stats
     setHistory(prev => [...prev, {
       playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
       score: isBust ? 0 : scoreVal,
@@ -130,16 +142,13 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       setP2Legs(newP2Legs);
       
       if (newP1Legs >= legsToWin || newP2Legs >= legsToWin) {
-          // Match is over!
           onMatchFinish(newP1Legs, newP2Legs, history);
       } else {
-          // Next leg
           setP1Score(settings.startingScore);
           setP2Score(settings.startingScore);
           setP1Visits(0);
           setP2Visits(0);
           setLegHistory([]);
-          // Alternate who starts the next leg
           const totalLegsPlayed = newP1Legs + newP2Legs;
           setCurrentPlayer((totalLegsPlayed % 2) === 0 ? 1 : 2);
       }
