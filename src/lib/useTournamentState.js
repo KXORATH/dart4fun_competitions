@@ -19,7 +19,7 @@ const INITIAL_STATE = {
   groupMatches: {},
   knockouts: [],
   winner: null,
-  settings: { startingScore: 501, checkoutType: 'double', bestOf: 3, knockoutBestOf: 3 },
+  settings: { mode: '1v1', startingScore: 501, checkoutType: 'double', bestOf: 3, knockoutBestOf: 3 },
   globalHistory: [],
   activeMatch: null
 };
@@ -62,7 +62,7 @@ export function useTournamentState() {
   });
 }, []);
 
-  const initHost = useCallback(() => {
+  const initHost = useCallback((mode = '1v1') => {
     const code = 'DART-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     const peer = new Peer(code);
 
@@ -70,7 +70,7 @@ export function useTournamentState() {
       setPeerId(id);
       setIsHost(true);
       isHostRef.current = true;
-      updateState({ phase: PHASES.SETUP_PLAYERS });
+      updateState(prev => ({ ...prev, phase: PHASES.SETUP_PLAYERS, settings: { ...prev.settings, mode } }));
     });
 
     peer.on('connection', (conn) => {

@@ -14,13 +14,18 @@ export default function Lobby({ onHost, onJoin }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <div className="glass-panel" style={{ padding: '2rem' }}>
           <Network size={48} color="var(--accent-color)" style={{ marginBottom: '1rem' }} />
-          <h3 style={{ marginBottom: '1rem' }}>Host a Tournament</h3>
+          <h3 style={{ marginBottom: '1rem' }}>Start Playing</h3>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-            Create a new tournament and get a room code for others to join and sync scores.
+            Choose a quick 1v1 or create a multi-player tournament.
           </p>
-          <button onClick={onHost} style={{ width: '100%' }}>
-            Create New Tournament
-          </button>
+          <div className="flex gap-2" style={{ flexDirection: 'column' }}>
+            <button onClick={() => onHost('1v1')} style={{ width: '100%', padding: '1rem', background: 'var(--accent-hover)' }}>
+                Quick 1v1 Match
+            </button>
+            <button onClick={() => onHost('tournament')} className="secondary" style={{ width: '100%' }}>
+                Create Tournament
+            </button>
+          </div>
         </div>
 
         <div className="glass-panel" style={{ padding: '2rem' }}>

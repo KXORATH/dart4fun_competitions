@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import MatchFlow from './MatchFlow';
 
-export default function StatsView({ players, globalHistory, onBack }) {
+export default function StatsView({ players, globalHistory, onBack, settings }) {
+  const [activeTab, setActiveTab] = useState('stats');
 
   // Compile stats per player
   const playerStats = players.map(player => {
@@ -12,7 +14,8 @@ export default function StatsView({ players, globalHistory, onBack }) {
       
       const totalScore = scoreThrows.reduce((sum, h) => sum + h.score, 0);
       const numVisits = scoreThrows.length;
-      const average3Dart = numVisits > 0 ? (totalScore / numVisits).toFixed(2) : '0.00';
+      const totalDarts = scoreThrows.reduce((sum, h) => sum + (h.dartsThrown || 3), 0);
+      const average3Dart = totalDarts > 0 ? ((totalScore / totalDarts) * 3).toFixed(2) : '0.00';
       
       const sixtyPlus = scoreThrows.filter(h => h.score >= 60 && h.score < 100).length;
       const tonPlus = scoreThrows.filter(h => h.score >= 100 && h.score < 140).length;
@@ -49,6 +52,16 @@ export default function StatsView({ players, globalHistory, onBack }) {
         <div style={{ width: '80px' }}></div>
       </div>
 
+      <div className="flex" style={{ justifyContent: 'center', gap: '1rem', marginBottom: '2rem' }}>
+        <button className={activeTab === 'stats' ? 'primary' : 'secondary'} onClick={() => setActiveTab('stats')}>
+          Statistics
+        </button>
+        <button className={activeTab === 'flow' ? 'primary' : 'secondary'} onClick={() => setActiveTab('flow')}>
+          Match Flow (Throw by Throw)
+        </button>
+      </div>
+
+      {activeTab === 'stats' ? (
       <div className="glass-panel" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
           <thead>
@@ -88,6 +101,9 @@ export default function StatsView({ players, globalHistory, onBack }) {
           </tbody>
         </table>
       </div>
+      ) : (
+          <MatchFlow players={players} globalHistory={globalHistory} settings={settings} />
+      )}
     </div>
   );
 }

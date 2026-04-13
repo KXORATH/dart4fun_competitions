@@ -18,6 +18,11 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   
   const [p1Visits, setP1Visits] = useState(match.liveState?.p1Visits ?? 0);
   const [p2Visits, setP2Visits] = useState(match.liveState?.p2Visits ?? 0);
+  
+  const [p1Darts, setP1Darts] = useState(match.liveState?.p1Darts ?? 0);
+  const [p2Darts, setP2Darts] = useState(match.liveState?.p2Darts ?? 0);
+  
+  const [pendingDartPrompt, setPendingDartPrompt] = useState(match.liveState?.pendingDartPrompt ?? null);
   const lastRemoteSnapshotRef = useRef(null);
   
   const legsToWin = Math.ceil(settings.bestOf / 2);
@@ -48,8 +53,12 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       inputValue,
       history,
       legHistory,
+      legHistory,
       p1Visits,
-      p2Visits
+      p2Visits,
+      p1Darts,
+      p2Darts,
+      pendingDartPrompt
     };
     const serializedSnapshot = JSON.stringify(snapshot);
 
@@ -64,7 +73,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     console.log('[MatchView] wywołuję onLiveUpdate, p1Score:', p1Score, 'p2Score:', p2Score);
     onLiveUpdate(snapshot);
     lastRemoteSnapshotRef.current = serializedSnapshot;
-  }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, onLiveUpdate]);
+  }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, onLiveUpdate]);
   
   const handleInput = (val) => {
     if (inputValue.length < 3) {
@@ -77,13 +86,14 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   };
 
   const handleEnter = () => {
-    console.log('[handleEnter] kliknięto Submit, inputValue:', inputValue);
-    if (inputValue === '') return;
-    const scoreVal = parseInt(inputValue, 10);
-    if (scoreVal > 180 || scoreVal < 0) {
-        alert("Invalid score (must be 0-180)");
-        setInputValue('');
-        return;
+    let scoreVal = 0;
+    if (inputValue !== '') {
+        scoreVal = parseInt(inputValue, 10);
+        if (scoreVal > 180 || scoreVal < 0) {
+            alert("Invalid score (must be 0-180)");
+            setInputValue('');
+            return;
+        }
     }
 
     const currentScore = currentPlayer === 1 ? p1Score : p2Score;
@@ -92,7 +102,16 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     let isBust = false;
     let wonLeg = false;
 
-    if (newScore < 0) {
+    if (inputValue === '') {
+        if (currentScore > 180) {
+            isBust = false;
+            scoreVal = 0;
+            // Won't trigger the modal, will just process as 0 score with 3 darts
+        } else {
+            isBust = true;
+            scoreVal = 0;
+        }
+    } else if (newScore < 0) {
         isBust = true;
     } else if (settings.checkoutType === 'double' && newScore === 1) {
         isBust = true;
@@ -100,27 +119,45 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         wonLeg = true;
     }
 
-    console.log('[handleEnter] currentScore:', currentScore, 'newScore:', newScore, 'isBust:', isBust, 'wonLeg:', wonLeg);
+    if (isBust || wonLeg) {
+        setPendingDartPrompt({ type: wonLeg ? 'win' : 'bust', score: scoreVal, isBust });
+        return;
+    }
 
-    setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits }]);
+    processThrow(scoreVal, false, 3);
+  };
 
-    const newP1Visits = currentPlayer === 1 ? p1Visits + 1 : p1Visits;
-    const newP2Visits = currentPlayer === 2 ? p2Visits + 1 : p2Visits;
+  const processThrow = (scoreVal, isBust, dartsThrown) => {
+    const currentScore = currentPlayer === 1 ? p1Score : p2Score;
+    let newScore = currentScore - scoreVal;
+    if (isBust) newScore = currentScore;
     
-    if (currentPlayer === 1) setP1Visits(newP1Visits);
-    else setP2Visits(newP2Visits);
+    const wonLeg = (!isBust && newScore === 0);
+
+    setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits, p1Darts, p2Darts }]);
+
+    if (currentPlayer === 1) {
+        setP1Visits(v => v + 1);
+        setP1Darts(d => d + dartsThrown);
+    } else {
+        setP2Visits(v => v + 1);
+        setP2Darts(d => d + dartsThrown);
+    }
 
     setHistory(prev => [...prev, {
       playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
       score: isBust ? 0 : scoreVal,
-      isBust
+      isBust,
+      p1Remaining: p1Score,
+      p2Remaining: p2Score,
+      dartsThrown
     }]);
 
     if (wonLeg) {
         setHistory(prev => [...prev, {
             playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
             type: 'LEG_WIN',
-            numDarts: (currentPlayer === 1 ? newP1Visits : newP2Visits) * 3,
+            numDarts: (currentPlayer === 1 ? p1Darts : p2Darts) + dartsThrown,
             checkout: scoreVal
         }]);
         handleLegWin(currentPlayer);
@@ -132,6 +169,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     }
     
     setInputValue('');
+    setPendingDartPrompt(null);
   };
 
   const handleLegWin = (winnerNum) => {
@@ -148,6 +186,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           setP2Score(settings.startingScore);
           setP1Visits(0);
           setP2Visits(0);
+          setP1Darts(0);
+          setP2Darts(0);
           setLegHistory([]);
           const totalLegsPlayed = newP1Legs + newP2Legs;
           setCurrentPlayer((totalLegsPlayed % 2) === 0 ? 1 : 2);
@@ -156,12 +196,15 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
   const handleUndo = () => {
       if (legHistory.length === 0) return;
+      setPendingDartPrompt(null);
       const lastState = legHistory[legHistory.length - 1];
       setP1Score(lastState.p1Score);
       setP2Score(lastState.p2Score);
       setCurrentPlayer(lastState.currentPlayer);
       setP1Visits(lastState.p1Visits);
       setP2Visits(lastState.p2Visits);
+      setP1Darts(lastState.p1Darts);
+      setP2Darts(lastState.p2Darts);
       
       setLegHistory(prev => prev.slice(0, -1));
       setHistory(prev => prev.slice(0, -1));
@@ -182,18 +225,20 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       </div>
 
       {/* Scoreboard */}
-      <div className="glass-panel" style={{ display: 'flex', marginBottom: '2rem', padding: '2rem' }}>
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginBottom: '2rem', padding: '2rem', gap: '2rem' }}>
         
         {/* Player 1 */}
-        <div style={{ flex: 1, textAlign: 'center', opacity: currentPlayer === 1 ? 1 : 0.5, transition: 'var(--transition)' }}>
+        <div style={{ flex: '1 1 40%', textAlign: 'center', opacity: currentPlayer === 1 ? 1 : 0.5, transition: 'var(--transition)' }}>
           <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: currentPlayer === 1 ? 'var(--accent-color)' : 'inherit' }}>
             {match.player1.name}
           </h3>
-          <div style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
             Legs: <strong style={{ color: 'var(--text-primary)' }}>{p1Legs}</strong>
+            <span style={{ margin: '0 10px' }}>|</span>
+            Darts: <strong style={{ color: 'var(--text-primary)' }}>{p1Darts}</strong>
           </div>
           <div style={{ 
-            fontSize: '5rem', 
+            fontSize: 'var(--score-font-size, 5rem)', 
             fontWeight: 'bold', 
             fontVariantNumeric: 'tabular-nums',
             textShadow: currentPlayer === 1 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none'
@@ -203,18 +248,20 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         </div>
 
         {/* Divider */}
-        <div style={{ width: '1px', background: 'var(--panel-border)', margin: '0 2rem' }}></div>
+        <div className="mobile-hidden" style={{ width: '1px', background: 'var(--panel-border)' }}></div>
 
         {/* Player 2 */}
-        <div style={{ flex: 1, textAlign: 'center', opacity: currentPlayer === 2 ? 1 : 0.5, transition: 'var(--transition)' }}>
+        <div style={{ flex: '1 1 40%', textAlign: 'center', opacity: currentPlayer === 2 ? 1 : 0.5, transition: 'var(--transition)' }}>
           <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: currentPlayer === 2 ? 'var(--accent-color)' : 'inherit' }}>
             {match.player2.name}
           </h3>
-          <div style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
             Legs: <strong style={{ color: 'var(--text-primary)' }}>{p2Legs}</strong>
+            <span style={{ margin: '0 10px' }}>|</span>
+            Darts: <strong style={{ color: 'var(--text-primary)' }}>{p2Darts}</strong>
           </div>
           <div style={{ 
-            fontSize: '5rem', 
+            fontSize: 'var(--score-font-size, 5rem)', 
             fontWeight: 'bold', 
             fontVariantNumeric: 'tabular-nums',
             textShadow: currentPlayer === 2 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none'
@@ -225,7 +272,24 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
       </div>
 
-      {/* Input Area */}
+      {pendingDartPrompt ? (
+        <div className="glass-panel text-center" style={{ maxWidth: '400px', margin: '0 auto', animation: 'fade-in 0.2s' }}>
+            <h3 style={{ marginBottom: '1rem', color: pendingDartPrompt.type === 'win' ? 'var(--success-color)' : 'var(--danger-color)' }}>
+                {pendingDartPrompt.type === 'win' ? 'Leg Shot!' : 'Bust!'}
+            </h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                How many darts did you throw?
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 1)}>1 Dart</button>
+                <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 2)}>2 Darts</button>
+                <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 3)}>3 Darts</button>
+            </div>
+            <button className="secondary" style={{ width: '100%' }} onClick={() => setPendingDartPrompt(null)}>
+                Cancel
+            </button>
+        </div>
+      ) : (
       <div className="glass-panel" style={{ maxWidth: '400px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '1.25rem', color: 'var(--text-secondary)' }}>
           Enter Score for <strong style={{ color: 'var(--text-primary)' }}>
@@ -269,11 +333,11 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         <button 
             style={{ width: '100%', marginTop: '1rem', padding: '1.25rem', fontSize: '1.5rem' }} 
             onClick={handleEnter}
-            disabled={inputValue === ''}
         >
-          Submit Score <Check size={24} style={{ marginLeft: '0.5rem' }} />
+          {inputValue === '' ? ((currentPlayer === 1 ? p1Score : p2Score) > 180 ? 'Submit 0' : 'Bust') : 'Submit Score'} <Check size={24} style={{ marginLeft: '0.5rem' }} />
         </button>
       </div>
+      )}
 
     </div>
   );

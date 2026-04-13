@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { UserPlus, UserMinus, ArrowRight } from 'lucide-react';
+import { UserPlus, UserMinus, ArrowRight, ArrowLeft } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function PlayerEntry({ players, setPlayers, onNext }) {
+export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
   const [newPlayerName, setNewPlayerName] = useState('');
 
   const handleAddPlayer = (e) => {
@@ -40,7 +40,7 @@ export default function PlayerEntry({ players, setPlayers, onNext }) {
         </h3>
         {players.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'center', padding: '2rem 0' }}>
-            No players added yet. Add at least 3 players to start.
+            No players added yet. Add at least 2 players to start.
           </p>
         ) : (
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -66,9 +66,12 @@ export default function PlayerEntry({ players, setPlayers, onNext }) {
         )}
       </div>
 
-      <div className="flex" style={{ justifyContent: 'center' }}>
-        <button onClick={onNext} disabled={players.length < 3}>
-          Proceed to Group Setup <ArrowRight size={18} />
+      <div className="flex" style={{ justifyContent: 'space-between' }}>
+        <button className="secondary" onClick={onBack}>
+          <ArrowLeft size={18} /> Back
+        </button>
+        <button onClick={onNext} disabled={players.length < 2}>
+          Proceed to Settings <ArrowRight size={18} />
         </button>
       </div>
     </div>

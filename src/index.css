@@ -171,3 +171,37 @@ input:focus, select:focus {
 .mt-4 { margin-top: 1rem; }
 .mb-4 { margin-bottom: 1rem; }
 .mb-8 { margin-bottom: 2rem; }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+.badge-140 { background-color: rgba(255, 255, 255, 0.2); color: #f3f4f6; }
+.badge-180 { background-color: #3b82f6; color: #ffffff; }
+.badge-break { background-color: #ef4444; color: #ffffff; font-size: 0.65rem; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mobile-hidden { display: none !important; }
+  
+  header { 
+      flex-direction: column; 
+      gap: 1rem; 
+  }
+  
+  header > div { 
+      text-align: center; 
+      justify-content: center;
+      width: 100%;
+  }
+
+  :root {
+      --score-font-size: 3.5rem;
+  }
+}

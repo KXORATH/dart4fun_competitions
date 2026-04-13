@@ -156,6 +156,8 @@ function App() {
           } else {
               newWinner = m.winner;
           }
+      } else if (activeMatch.type === 'single') {
+          returnPhase = PHASES.STATS_VIEW;
       }
 
       updateState({
@@ -214,12 +216,23 @@ function App() {
         return { ...prev, knockouts: updatedKnockouts };
       }
 
+      if (activeMatch.type === 'single') {
+          if (JSON.stringify(prev.activeMatch.liveState ?? null) === JSON.stringify(liveState)) return prev;
+          return {
+            ...prev,
+            activeMatch: { ...prev.activeMatch, liveState }
+          };
+      }
+
       return prev;
     });
   }, [updateState]);
 
   const getActiveMatchData = () => {
       if (!activeMatch) return null;
+      if (activeMatch.type === 'single') {
+          return activeMatch;
+      }
       if (activeMatch.type === 'group') {
           return groupMatches[activeMatch.groupId].find(m => m.id === activeMatch.matchId);
       } else {
@@ -244,7 +257,7 @@ function App() {
               </div>
           )}
 
-          {phase > PHASES.SETUP_GROUPS && phase !== PHASES.STATS_VIEW && (
+          {(phase > PHASES.SETUP_GROUPS || (settings?.mode === '1v1' && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
               <button className="secondary" onClick={() => setPhase(PHASES.STATS_VIEW)}>View Stats</button>
           )}
         </div>
@@ -260,6 +273,7 @@ function App() {
             players={players} 
             setPlayers={(p) => updateState({ players: p })} 
             onNext={() => setPhase(PHASES.SETUP_SETTINGS)} 
+            onBack={() => setPhase(PHASES.LOBBY)}
           />
         )}
         
@@ -267,7 +281,25 @@ function App() {
           <TournamentSettings 
             settings={settings}
             setSettings={(s) => updateState({ settings: s })}
-            onNext={() => setPhase(PHASES.SETUP_GROUPS)}
+            onNext={() => {
+                if (settings.mode === '1v1') {
+                    updateState({ 
+                        activeMatch: {
+                           id: uuidv4(),
+                           type: 'single',
+                           player1: players[0],
+                           player2: players[1],
+                           p1Legs: 0,
+                           p2Legs: 0,
+                           isFinished: false,
+                           winner: null
+                        },
+                        phase: PHASES.MATCH_VIEW 
+                    });
+                } else {
+                    setPhase(PHASES.SETUP_GROUPS);
+                }
+            }}
             onBack={() => setPhase(PHASES.SETUP_PLAYERS)}
           />
         )}
@@ -306,7 +338,7 @@ function App() {
             settings={{ ...settings, bestOf: activeMatch.type === 'knockout' ? settings.knockoutBestOf : settings.bestOf }}
             onMatchFinish={handleMatchFinish}
             onLiveUpdate={handleMatchLiveUpdate}
-            onBack={() => setPhase(activeMatch.type === 'group' ? PHASES.GROUP_STAGE : PHASES.KNOCKOUT_STAGE)}
+            onBack={() => setPhase(activeMatch.type === 'single' ? PHASES.SETUP_SETTINGS : (activeMatch.type === 'group' ? PHASES.GROUP_STAGE : PHASES.KNOCKOUT_STAGE))}
           />
         )}
 
@@ -314,7 +346,8 @@ function App() {
           <StatsView
             players={players}
             globalHistory={globalHistory}
-            onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE))}
+            settings={settings}
+            onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : (settings?.mode === '1v1' ? PHASES.SETUP_SETTINGS : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE)))}
           />
         )}
       </main>

@@ -13,6 +13,19 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
       
       <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+          Game Mode
+        </label>
+        <select 
+          value={settings.mode || '1v1'} 
+          onChange={(e) => updateSetting('mode', e.target.value)}
+        >
+          <option value="1v1">1v1 Quick Match</option>
+          <option value="tournament">Tournament (Groups & Knockout)</option>
+        </select>
+      </div>
+
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
           Starting Score
         </label>
         <select 
@@ -77,7 +90,7 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
           <ArrowLeft size={18} /> Back
         </button>
         <button onClick={onNext}>
-          Proceed to Group Setup <ArrowRight size={18} />
+          {settings.mode === '1v1' ? 'Start Match' : 'Proceed to Group Setup'} <ArrowRight size={18} />
         </button>
       </div>
     </div>
