@@ -345,7 +345,7 @@ function App() {
         {phase === PHASES.STATS_VIEW && (
           <StatsView
             players={players}
-            globalHistory={globalHistory}
+            globalHistory={activeMatch && getActiveMatchData()?.liveState ? [...globalHistory, ...(getActiveMatchData()?.liveState?.history || [])] : globalHistory}
             settings={settings}
             onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : (settings?.mode === '1v1' ? PHASES.SETUP_SETTINGS : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE)))}
           />
