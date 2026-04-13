@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Check, X, Undo } from 'lucide-react';
+import { ArrowLeft, Check, Delete, Undo } from 'lucide-react';
 
 export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate, onBack }) {
   console.log('[MatchView] render, match.id:', match?.id, 'onLiveUpdate type:', typeof onLiveUpdate);
@@ -213,6 +213,32 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       setInputValue('');
   };
 
+  const calculateAverage = (playerNum) => {
+      const playerId = playerNum === 1 ? match.player1.id : match.player2.id;
+      let totalScore = 0;
+      let totalDarts = 0;
+      
+      history.forEach(h => {
+          if (h.playerId === playerId && h.type !== 'LEG_WIN') {
+              totalScore += h.score || 0;
+              totalDarts += h.dartsThrown || 0;
+          }
+      });
+      
+      if (totalDarts === 0) return 0;
+      return (totalScore / totalDarts) * 3;
+  };
+
+  const getLastScore = (playerNum) => {
+      const playerId = playerNum === 1 ? match.player1.id : match.player2.id;
+      for (let i = history.length - 1; i >= 0; i--) {
+          if (history[i].playerId === playerId && history[i].type !== 'LEG_WIN') {
+              return history[i].score;
+          }
+      }
+      return '-';
+  };
+
   return (
     <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -227,51 +253,56 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       </div>
 
       {/* Scoreboard */}
-      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginBottom: '2rem', padding: '2rem', gap: '2rem' }}>
-        
-        {/* Player 1 */}
-        <div style={{ flex: '1 1 40%', textAlign: 'center', opacity: currentPlayer === 1 ? 1 : 0.5, transition: 'var(--transition)' }}>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: currentPlayer === 1 ? 'var(--accent-color)' : 'inherit' }}>
+      <div className="glass-panel" style={{ marginBottom: '0.5rem', padding: '2rem' }}>
+        {/* Top Row: Names */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '1rem' }}>
+          <h3 style={{ width: '40%', textAlign: 'center', fontSize: '1.5rem', margin: 0, color: currentPlayer === 1 ? 'var(--accent-color)' : 'inherit', opacity: currentPlayer === 1 ? 1 : 0.5, transition: 'var(--transition)' }}>
             {match.player1.name}
           </h3>
-          <div style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-            Legs: <strong style={{ color: 'var(--text-primary)' }}>{p1Legs}</strong>
-            <span style={{ margin: '0 10px' }}>|</span>
-            Darts: <strong style={{ color: 'var(--text-primary)' }}>{p1Darts}</strong>
-          </div>
-          <div style={{ 
-            fontSize: 'var(--score-font-size, 5rem)', 
-            fontWeight: 'bold', 
-            fontVariantNumeric: 'tabular-nums',
-            textShadow: currentPlayer === 1 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none'
-          }}>
-            {p1Score}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="mobile-hidden" style={{ width: '1px', background: 'var(--panel-border)' }}></div>
-
-        {/* Player 2 */}
-        <div style={{ flex: '1 1 40%', textAlign: 'center', opacity: currentPlayer === 2 ? 1 : 0.5, transition: 'var(--transition)' }}>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: currentPlayer === 2 ? 'var(--accent-color)' : 'inherit' }}>
+          <div style={{ width: '20%' }}></div>
+          <h3 style={{ width: '40%', textAlign: 'center', fontSize: '1.5rem', margin: 0, color: currentPlayer === 2 ? 'var(--accent-color)' : 'inherit', opacity: currentPlayer === 2 ? 1 : 0.5, transition: 'var(--transition)' }}>
             {match.player2.name}
           </h3>
-          <div style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-            Legs: <strong style={{ color: 'var(--text-primary)' }}>{p2Legs}</strong>
-            <span style={{ margin: '0 10px' }}>|</span>
-            Darts: <strong style={{ color: 'var(--text-primary)' }}>{p2Darts}</strong>
+        </div>
+
+        {/* Middle Row: Scores and Legs */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          {/* P1 Score */}
+          <div style={{ width: '40%', textAlign: 'center', fontSize: 'var(--score-font-size, 5rem)', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums', textShadow: currentPlayer === 1 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 1 ? 1 : 0.5, transition: 'var(--transition)' }}>
+            {p1Score}
           </div>
-          <div style={{ 
-            fontSize: 'var(--score-font-size, 5rem)', 
-            fontWeight: 'bold', 
-            fontVariantNumeric: 'tabular-nums',
-            textShadow: currentPlayer === 2 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none'
-          }}>
+          
+          {/* Legs */}
+          <div style={{ width: '20%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid var(--panel-border)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '3rem', fontWeight: 'bold', padding: '0.2rem 0.8rem' }}>
+              {p1Legs}
+            </div>
+            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>-</div>
+            <div style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid var(--panel-border)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '3rem', fontWeight: 'bold', padding: '0.2rem 0.8rem' }}>
+              {p2Legs}
+            </div>
+          </div>
+
+          {/* P2 Score */}
+          <div style={{ width: '40%', textAlign: 'center', fontSize: 'var(--score-font-size, 5rem)', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums', textShadow: currentPlayer === 2 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 2 ? 1 : 0.5, transition: 'var(--transition)' }}>
             {p2Score}
           </div>
         </div>
+      </div>
 
+      {/* Statistics under scoreboard */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', padding: '0 1rem' }}>
+        <div style={{ textAlign: 'left', fontSize: '0.9rem' }}>
+          <div style={{ color: 'var(--text-secondary)' }}>3 dart average : {(calculateAverage(1) || 0).toFixed(2)}</div>
+          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Darts: <strong style={{ color: 'white' }}>{p1Darts}</strong></div>
+          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Last score: <span style={{ color: 'white' }}>{getLastScore(1)}</span></div>
+        </div>
+
+        <div style={{ textAlign: 'right', fontSize: '0.9rem' }}>
+          <div style={{ color: 'var(--text-secondary)' }}>3 dart average : {(calculateAverage(2) || 0).toFixed(2)}</div>
+          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Darts: <strong style={{ color: 'white' }}>{p2Darts}</strong></div>
+          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Last score: <span style={{ color: 'white' }}>{getLastScore(2)}</span></div>
+        </div>
       </div>
 
       {pendingDartPrompt ? (
@@ -327,8 +358,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           <button className="secondary" style={{ fontSize: '1.5rem', padding: '1rem' }} onClick={() => handleInput('0')}>
             0
           </button>
-          <button className="danger" style={{ fontSize: '1.5rem', padding: '1rem' }} onClick={handleBackspace}>
-            <X size={24} />
+          <button className="secondary" style={{ fontSize: '1.5rem', padding: '1rem', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
+            <Delete size={32} strokeWidth={1.5} />
           </button>
         </div>
         
