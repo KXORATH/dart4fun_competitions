@@ -253,38 +253,38 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       </div>
 
       {/* Scoreboard */}
-      <div className="glass-panel" style={{ marginBottom: '0.5rem', padding: '2rem' }}>
+      <div className="glass-panel scoreboard-panel">
         {/* Top Row: Names */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '1rem' }}>
-          <h3 style={{ width: '40%', textAlign: 'center', fontSize: '1.5rem', margin: 0, color: currentPlayer === 1 ? 'var(--accent-color)' : 'inherit', opacity: currentPlayer === 1 ? 1 : 0.5, transition: 'var(--transition)' }}>
+        <div className="player-name-row">
+          <h3 className="player-name" style={{ color: currentPlayer === 1 ? 'var(--accent-color)' : 'inherit', opacity: currentPlayer === 1 ? 1 : 0.5 }}>
             {match.player1.name}
           </h3>
-          <div style={{ width: '20%' }}></div>
-          <h3 style={{ width: '40%', textAlign: 'center', fontSize: '1.5rem', margin: 0, color: currentPlayer === 2 ? 'var(--accent-color)' : 'inherit', opacity: currentPlayer === 2 ? 1 : 0.5, transition: 'var(--transition)' }}>
+          <div className="player-name-spacer"></div>
+          <h3 className="player-name" style={{ color: currentPlayer === 2 ? 'var(--accent-color)' : 'inherit', opacity: currentPlayer === 2 ? 1 : 0.5 }}>
             {match.player2.name}
           </h3>
         </div>
 
         {/* Middle Row: Scores and Legs */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <div className="scoreboard-row">
           {/* P1 Score */}
-          <div style={{ width: '40%', textAlign: 'center', fontSize: 'var(--score-font-size, 5rem)', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums', textShadow: currentPlayer === 1 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 1 ? 1 : 0.5, transition: 'var(--transition)' }}>
+          <div className="score-cell" style={{ textShadow: currentPlayer === 1 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 1 ? 1 : 0.5 }}>
             {p1Score}
           </div>
           
           {/* Legs */}
-          <div style={{ width: '20%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid var(--panel-border)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '3rem', fontWeight: 'bold', padding: '0.2rem 0.8rem' }}>
+          <div className="legs-cell">
+            <div className="leg-box">
               {p1Legs}
             </div>
-            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>-</div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid var(--panel-border)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '3rem', fontWeight: 'bold', padding: '0.2rem 0.8rem' }}>
+            <div className="leg-divider">-</div>
+            <div className="leg-box">
               {p2Legs}
             </div>
           </div>
 
           {/* P2 Score */}
-          <div style={{ width: '40%', textAlign: 'center', fontSize: 'var(--score-font-size, 5rem)', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums', textShadow: currentPlayer === 2 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 2 ? 1 : 0.5, transition: 'var(--transition)' }}>
+          <div className="score-cell" style={{ textShadow: currentPlayer === 2 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 2 ? 1 : 0.5 }}>
             {p2Score}
           </div>
         </div>

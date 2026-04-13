@@ -205,3 +205,100 @@ input:focus, select:focus {
       --score-font-size: 3.5rem;
   }
 }
+
+/* Match Scoreboard */
+.scoreboard-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.score-cell {
+  width: 40%;
+  text-align: center;
+  font-size: 5rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  transition: var(--transition);
+}
+
+.legs-cell {
+  width: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leg-box {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 3rem;
+  font-weight: bold;
+  padding: 0.2rem 0.8rem;
+}
+
+.leg-divider {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.player-name-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.player-name {
+  width: 40%;
+  text-align: center;
+  font-size: 1.5rem;
+  margin: 0;
+  transition: var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-name-spacer {
+  width: 20%;
+}
+
+.scoreboard-panel {
+  margin-bottom: 0.5rem;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .scoreboard-panel {
+    padding: 1rem;
+  }
+  .score-cell {
+    font-size: 3.2rem;
+    width: 35%;
+  }
+  .legs-cell {
+    width: 30%;
+    gap: 0.25rem;
+  }
+  .leg-box {
+    font-size: 1.5rem;
+    padding: 0.2rem 0.5rem;
+  }
+  .leg-divider {
+    font-size: 1.5rem;
+  }
+  .player-name {
+    font-size: 1.1rem;
+    width: 35%;
+  }
+  .player-name-spacer {
+    width: 30%;
+  }
+}
+
