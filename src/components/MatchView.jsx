@@ -41,6 +41,9 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     setLegHistory(match.liveState.legHistory);
     setP1Visits(match.liveState.p1Visits);
     setP2Visits(match.liveState.p2Visits);
+    setP1Darts(match.liveState.p1Darts ?? 0);
+    setP2Darts(match.liveState.p2Darts ?? 0);
+    setPendingDartPrompt(match.liveState.pendingDartPrompt ?? null);
   }, [match.liveState]);
 
   useEffect(() => {
@@ -52,7 +55,6 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       currentPlayer,
       inputValue,
       history,
-      legHistory,
       legHistory,
       p1Visits,
       p2Visits,
