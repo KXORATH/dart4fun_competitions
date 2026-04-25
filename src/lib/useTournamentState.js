@@ -127,7 +127,7 @@ export function useTournamentState() {
     });
 
     peer.on('open', () => {
-      const conn = peer.connect(code, { reliable: true });
+      const conn = peer.connect(code);
 
       conn.on('open', () => {
         hostConnRef.current = conn;
