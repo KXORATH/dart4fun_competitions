@@ -44,6 +44,10 @@ export default function Lobby({ onHost, onJoin }) {
             />
             <button 
               onClick={() => {
+                if(!joinCode.trim()) {
+                  alert("Pole kodu jest puste! Wpisz kod pokoju by dołaczyć.");
+                  return;
+                }
                 const btn = document.getElementById('join-btn');
                 if(btn) btn.innerText = 'Connecting...';
                 onJoin(joinCode);
@@ -51,9 +55,8 @@ export default function Lobby({ onHost, onJoin }) {
                   if(btn && btn.innerText === 'Connecting...') btn.innerText = 'Join Room';
                 }, 4000);
               }} 
-              disabled={!joinCode.trim()}
               id="join-btn"
-              style={{ background: joinCode.trim() ? 'var(--success-color)' : 'var(--panel-border)' }}
+              style={{ background: 'var(--success-color)' }}
             >
               Join Room
             </button>
