@@ -1,26 +1,41 @@
 export function generateRoundRobin(players) {
   const matches = [];
   let matchId = 1;
-  const numPlayers = players.length;
   
-  for (let i = 0; i < numPlayers; i++) {
-    for (let j = i + 1; j < numPlayers; j++) {
-      const potentialJudges = players.filter(p => p.id !== players[i].id && p.id !== players[j].id);
-      const judge = potentialJudges.length > 0 
-        ? potentialJudges[Math.floor(Math.random() * potentialJudges.length)] 
-        : null;
-
-      matches.push({
-        id: `m_${matchId++}`,
-        player1: players[i],
-        player2: players[j],
-        judge: judge,
-        p1Legs: null,
-        p2Legs: null,
-        isFinished: false
-      });
-    }
+  const ps = [...players];
+  if (ps.length % 2 !== 0) {
+    ps.push(null);
   }
+  
+  const numRounds = ps.length - 1;
+  const halfSize = ps.length / 2;
+  
+  for (let round = 0; round < numRounds; round++) {
+    for (let i = 0; i < halfSize; i++) {
+      const p1 = ps[i];
+      const p2 = ps[ps.length - 1 - i];
+      
+      if (p1 !== null && p2 !== null) {
+        const potentialJudges = players.filter(p => p.id !== p1.id && p.id !== p2.id);
+        const judge = potentialJudges.length > 0 
+          ? potentialJudges[Math.floor(Math.random() * potentialJudges.length)] 
+          : null;
+
+        matches.push({
+          id: `m_${matchId++}`,
+          player1: p1,
+          player2: p2,
+          judge: judge,
+          p1Legs: null,
+          p2Legs: null,
+          isFinished: false
+        });
+      }
+    }
+    const last = ps.pop();
+    ps.splice(1, 0, last);
+  }
+  
   return matches;
 }
 

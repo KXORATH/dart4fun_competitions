@@ -9,6 +9,12 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   
   const [p1Score, setP1Score] = useState(match.liveState?.p1Score ?? settings.startingScore);
   const [p2Score, setP2Score] = useState(match.liveState?.p2Score ?? settings.startingScore);
+
+  const [bullseyeWinner, setBullseyeWinner] = useState(() => {
+    if (match.liveState?.bullseyeWinner) return match.liveState.bullseyeWinner;
+    const hasHistory = (match.liveState?.history?.length > 0) || (match.p1Legs > 0) || (match.p2Legs > 0);
+    return hasHistory ? 1 : null;
+  });
   
   const [currentPlayer, setCurrentPlayer] = useState(match.liveState?.currentPlayer ?? 1);
   const [inputValue, setInputValue] = useState(match.liveState?.inputValue ?? '');
@@ -44,6 +50,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     setP1Darts(match.liveState.p1Darts ?? 0);
     setP2Darts(match.liveState.p2Darts ?? 0);
     setPendingDartPrompt(match.liveState.pendingDartPrompt ?? null);
+    setBullseyeWinner(match.liveState.bullseyeWinner ?? null);
   }, [match.liveState]);
 
   useEffect(() => {
@@ -60,7 +67,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       p2Visits,
       p1Darts,
       p2Darts,
-      pendingDartPrompt
+      pendingDartPrompt,
+      bullseyeWinner
     };
     const serializedSnapshot = JSON.stringify(snapshot);
 
@@ -75,7 +83,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     console.log('[MatchView] wywołuję onLiveUpdate, p1Score:', p1Score, 'p2Score:', p2Score);
     onLiveUpdate(snapshot);
     lastRemoteSnapshotRef.current = serializedSnapshot;
-  }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, onLiveUpdate]);
+  }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, bullseyeWinner, onLiveUpdate]);
   
   const handleInput = (val) => {
     if (inputValue.length < 3) {
@@ -192,7 +200,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           setP2Darts(0);
           setLegHistory([]);
           const totalLegsPlayed = newP1Legs + newP2Legs;
-          setCurrentPlayer((totalLegsPlayed % 2) === 0 ? 1 : 2);
+          setCurrentPlayer((totalLegsPlayed % 2) === 0 ? bullseyeWinner : (bullseyeWinner === 1 ? 2 : 1));
       }
   };
 
@@ -238,6 +246,29 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       }
       return '-';
   };
+
+  if (!bullseyeWinner) {
+      return (
+        <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <button className="secondary" onClick={onBack}>
+              <ArrowLeft size={18} /> Back
+            </button>
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ margin: 0 }}>Match Setup</h2>
+            </div>
+            <div style={{ width: '80px' }}></div>
+          </div>
+          <div className="glass-panel text-center" style={{ maxWidth: '400px', margin: '2rem auto' }}>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Who was closer to the bull?</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <button className="primary" onClick={() => { setBullseyeWinner(1); setCurrentPlayer(1); }}>{match.player1.name}</button>
+                  <button className="primary" onClick={() => { setBullseyeWinner(2); setCurrentPlayer(2); }}>{match.player2.name}</button>
+              </div>
+          </div>
+        </div>
+      );
+  }
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
