@@ -50,7 +50,7 @@ export default function Lobby({ onHost, onJoin }) {
                 }
                 const btn = document.getElementById('join-btn');
                 if(btn) btn.innerText = 'Connecting...';
-                onJoin(joinCode);
+                onJoin(joinCode.trim());
                 setTimeout(() => {
                   if(btn && btn.innerText === 'Connecting...') btn.innerText = 'Join Room';
                 }, 4000);
