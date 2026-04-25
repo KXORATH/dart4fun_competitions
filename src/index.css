@@ -217,18 +217,9 @@ input:focus, select:focus {
 @media (max-width: 768px) {
   .mobile-hidden { display: none !important; }
   .mobile-hidden-header { display: none !important; }
-  
-  body {
-    height: 100dvh;
-    overflow: hidden;
-  }
 
   #root {
     padding: 0.5rem;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
   }
 
   header { 
