@@ -1,6 +1,7 @@
 export function generateRoundRobin(players) {
   const matches = [];
   let matchId = 1;
+  const judgeCounts = {};
   
   const ps = [...players];
   if (ps.length % 2 !== 0) {
@@ -17,10 +18,16 @@ export function generateRoundRobin(players) {
       
       if (p1 !== null && p2 !== null) {
         const potentialJudges = players.filter(p => p.id !== p1.id && p.id !== p2.id);
-        const judge = potentialJudges.length > 0 
-          ? potentialJudges[Math.floor(Math.random() * potentialJudges.length)] 
-          : null;
-
+        let judge = null;
+        if (potentialJudges.length > 0) {
+            let minCount = Infinity;
+            potentialJudges.forEach(p => {
+                if ((judgeCounts[p.id] || 0) < minCount) minCount = (judgeCounts[p.id] || 0);
+            });
+            const bestJudges = potentialJudges.filter(p => (judgeCounts[p.id] || 0) === minCount);
+            judge = bestJudges[Math.floor(Math.random() * bestJudges.length)];
+            judgeCounts[judge.id] = (judgeCounts[judge.id] || 0) + 1;
+        }
         matches.push({
           id: `m_${matchId++}`,
           player1: p1,
