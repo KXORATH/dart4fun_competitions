@@ -64,7 +64,14 @@ export function useTournamentState() {
 
   const initHost = useCallback((mode = '1v1') => {
     const code = 'DART-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-    const peer = new Peer(code);
+    const peer = new Peer(code, {
+      config: {
+        'iceServers': [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' }
+        ]
+      }
+    });
 
     peer.on('open', (id) => {
       setPeerId(id);
@@ -103,7 +110,14 @@ export function useTournamentState() {
   }, [updateState]);
 
   const joinHost = useCallback((code) => {
-    const peer = new Peer();
+    const peer = new Peer({
+      config: {
+        'iceServers': [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' }
+        ]
+      }
+    });
 
     peer.on('error', (err) => {
       console.error(err);
