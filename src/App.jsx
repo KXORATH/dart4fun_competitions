@@ -234,10 +234,10 @@ function App() {
           return activeMatch;
       }
       if (activeMatch.type === 'group') {
-          return groupMatches[activeMatch.groupId].find(m => m.id === activeMatch.matchId);
+          return groupMatches[activeMatch.groupId]?.find(m => m.id === activeMatch.matchId) || null;
       } else {
           const round = knockouts.find(r => r.id === activeMatch.roundId);
-          return round.matches.find(m => m.id === activeMatch.matchId);
+          return round?.matches?.find(m => m.id === activeMatch.matchId) || null;
       }
   };
 
@@ -332,7 +332,7 @@ function App() {
           />
         )}
 
-        {phase === PHASES.MATCH_VIEW && activeMatch && (
+        {phase === PHASES.MATCH_VIEW && activeMatch && getActiveMatchData() && (
           <MatchView
             match={getActiveMatchData()}
             settings={{ ...settings, bestOf: activeMatch.type === 'knockout' ? settings.knockoutBestOf : settings.bestOf }}
