@@ -43,8 +43,16 @@ export default function Lobby({ onHost, onJoin }) {
               style={{ flex: 1, textTransform: 'uppercase' }}
             />
             <button 
-              onClick={() => onJoin(joinCode)} 
+              onClick={() => {
+                const btn = document.getElementById('join-btn');
+                if(btn) btn.innerText = 'Connecting...';
+                onJoin(joinCode);
+                setTimeout(() => {
+                  if(btn && btn.innerText === 'Connecting...') btn.innerText = 'Join Room';
+                }, 4000);
+              }} 
               disabled={!joinCode.trim()}
+              id="join-btn"
               style={{ background: joinCode.trim() ? 'var(--success-color)' : 'var(--panel-border)' }}
             >
               Join Room
