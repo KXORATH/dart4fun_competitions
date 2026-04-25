@@ -243,7 +243,7 @@ function App() {
 
   return (
     <>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <header className={phase === PHASES.MATCH_VIEW ? "mobile-hidden-header" : ""} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ margin: 0 }}>Dart4fun Competitions</h1>
           <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Live Sync Engine</p>

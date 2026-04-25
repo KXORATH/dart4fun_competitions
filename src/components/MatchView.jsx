@@ -271,8 +271,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   }
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+    <div className="animate-fade-in match-view-wrapper" style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <div className="flex match-view-header" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <button className="secondary" onClick={onBack}>
           <ArrowLeft size={18} /> Back
         </button>
@@ -322,7 +322,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       </div>
 
       {/* Statistics under scoreboard */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', padding: '0 1rem' }}>
+      <div className="match-stats-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '0 1rem' }}>
         <div style={{ textAlign: 'left', fontSize: '0.9rem' }}>
           <div style={{ color: 'var(--text-secondary)' }}>3 dart average : {(calculateAverage(1) || 0).toFixed(2)}</div>
           <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Darts: <strong style={{ color: 'white' }}>{p1Darts}</strong></div>
@@ -354,21 +354,17 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
             </button>
         </div>
       ) : (
-      <div className="glass-panel" style={{ maxWidth: '400px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '1.25rem', color: 'var(--text-secondary)' }}>
+      <div className="glass-panel input-panel" style={{ maxWidth: '400px', margin: '0 auto' }}>
+        <div className="input-prompt" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
           Enter Score for <strong style={{ color: 'var(--text-primary)' }}>
             {currentPlayer === 1 ? match.player1.name : match.player2.name}
           </strong>
         </div>
 
-        <div style={{ 
+        <div className="input-display-box" style={{ 
           background: 'rgba(0,0,0,0.3)', 
-          padding: '1rem', 
           borderRadius: '12px', 
-          fontSize: '2.5rem', 
           textAlign: 'center',
-          marginBottom: '1rem',
-          minHeight: '80px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -377,25 +373,26 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           {inputValue || <span style={{ opacity: 0.3 }}>0</span>}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+        <div className="numpad-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
           {[1,2,3,4,5,6,7,8,9].map(num => (
-            <button key={num} className="secondary" style={{ fontSize: '1.5rem', padding: '1rem' }} onClick={() => handleInput(num.toString())}>
+            <button key={num} className="secondary numpad-btn" onClick={() => handleInput(num.toString())}>
               {num}
             </button>
           ))}
-          <button className="secondary" style={{ fontSize: '1.5rem', padding: '1rem' }} onClick={handleUndo}>
+          <button className="secondary numpad-btn" onClick={handleUndo}>
             <Undo size={24} />
           </button>
-          <button className="secondary" style={{ fontSize: '1.5rem', padding: '1rem' }} onClick={() => handleInput('0')}>
+          <button className="secondary numpad-btn" onClick={() => handleInput('0')}>
             0
           </button>
-          <button className="secondary" style={{ fontSize: '1.5rem', padding: '1rem', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
+          <button className="secondary numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
             <Delete size={32} strokeWidth={1.5} />
           </button>
         </div>
         
         <button 
-            style={{ width: '100%', marginTop: '1rem', padding: '1.25rem', fontSize: '1.5rem' }} 
+            className="submit-btn"
+            style={{ width: '100%' }} 
             onClick={handleEnter}
         >
           {inputValue === '' ? ((currentPlayer === 1 ? p1Score : p2Score) > 180 ? 'Submit 0' : 'Bust') : 'Submit Score'} <Check size={24} style={{ marginLeft: '0.5rem' }} />
