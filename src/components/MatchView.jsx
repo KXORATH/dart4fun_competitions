@@ -68,8 +68,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       p1Darts,
       p2Darts,
       pendingDartPrompt,
-      bullseyeWinner,
-      operatorId: match.liveState?.operatorId
+      bullseyeWinner
     };
     const serializedSnapshot = JSON.stringify(snapshot);
 
@@ -84,7 +83,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     console.log('[MatchView] wywołuję onLiveUpdate, p1Score:', p1Score, 'p2Score:', p2Score);
     onLiveUpdate(snapshot);
     lastRemoteSnapshotRef.current = serializedSnapshot;
-  }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, bullseyeWinner, match.liveState?.operatorId, onLiveUpdate]);
+  }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, bullseyeWinner, onLiveUpdate]);
   
   const handleInput = (val) => {
     if (inputValue.length < 3) {

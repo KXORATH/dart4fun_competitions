@@ -98,10 +98,6 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, o
                           <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent-color)' }}>
                             {m.p1Legs} - {m.p2Legs}
                           </div>
-                        ) : m.liveState?.operatorId ? (
-                          <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', minWidth: '95px', color: 'var(--warning-color)', fontWeight: 'bold', textAlign: 'center' }}>
-                            In game
-                          </div>
                         ) : m.liveState ? (
                           <button onClick={() => onPlayMatch(group.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', minWidth: '95px', background: 'var(--warning-color)', color: '#000' }}>
                             Continue

@@ -168,35 +168,6 @@ export function useTournamentState() {
       conn.on('close', () => {
         connectionsRef.current = connectionsRef.current.filter(c => c.peer !== conn.peer);
         setConnectionsCount(connectionsRef.current.length);
-
-        setState(prev => {
-            let changed = false;
-            
-            const clearLock = (m) => {
-                if (m.liveState?.operatorId === conn.peer) {
-                    changed = true;
-                    return { ...m, liveState: { ...m.liveState, operatorId: null } };
-                }
-                return m;
-            };
-
-            const newGroupMatches = {};
-            for (const gId in prev.groupMatches) {
-                 newGroupMatches[gId] = prev.groupMatches[gId].map(clearLock);
-            }
-
-            const newKnockouts = prev.knockouts.map(r => ({
-                ...r,
-                matches: r.matches.map(clearLock)
-            }));
-
-            if (changed) {
-                const next = { ...prev, groupMatches: newGroupMatches, knockouts: newKnockouts };
-                connectionsRef.current.filter(c => c.open).forEach(c => c.send({ type: 'STATE_UPDATE', payload: next }));
-                return next;
-            }
-            return prev;
-        });
       });
     });
 
