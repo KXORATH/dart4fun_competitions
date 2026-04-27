@@ -337,7 +337,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       </div>
 
       {pendingDartPrompt ? (
-        <div className="glass-panel text-center" style={{ maxWidth: '400px', margin: '0 auto', animation: 'fade-in 0.2s' }}>
+        <div className="glass-panel text-center pending-panel" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', animation: 'fade-in 0.2s', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center' }}>
             <h3 style={{ marginBottom: '1rem', color: pendingDartPrompt.type === 'win' ? 'var(--success-color)' : 'var(--danger-color)' }}>
                 {pendingDartPrompt.type === 'win' ? 'Leg Shot!' : 'Bust!'}
             </h3>
@@ -354,7 +354,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
             </button>
         </div>
       ) : (
-      <div className="glass-panel input-panel" style={{ maxWidth: '400px', margin: '0 auto' }}>
+      <div className="glass-panel input-panel" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
         <div className="input-prompt" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
           Enter Score for <strong style={{ color: 'var(--text-primary)' }}>
             {currentPlayer === 1 ? match.player1.name : match.player2.name}
