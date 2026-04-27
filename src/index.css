@@ -578,3 +578,150 @@ input:focus, select:focus {
   }
 }
 
+/* ======== QR Code Display ======== */
+.qr-header-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid var(--panel-border);
+}
+
+.qr-header-badge:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.qr-small-wrapper {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-code-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.qr-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.qr-code-value {
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  color: var(--accent-color);
+}
+
+/* QR Overlay (expanded) */
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.qr-overlay-content {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 340px;
+  width: 90%;
+}
+
+.qr-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  padding: 0.4rem;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.qr-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  transform: none;
+  box-shadow: none;
+}
+
+.qr-overlay-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.qr-large-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  background: white;
+  border-radius: 12px;
+  padding: 0.5rem;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.qr-overlay-code {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+}
+
+.qr-overlay-hint {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .qr-header-badge {
+    padding: 0.3rem 0.6rem;
+    gap: 0.4rem;
+  }
+  .qr-small-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+  .qr-small-wrapper svg {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .qr-code-value {
+    font-size: 0.75rem;
+  }
+  .qr-label {
+    font-size: 0.6rem;
+  }
+}
+

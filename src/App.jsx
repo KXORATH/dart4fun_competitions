@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateGroupStandings } from './lib/tournamentUtils';
 import { useTournamentState, PHASES } from './lib/useTournamentState';
@@ -11,10 +11,22 @@ import GroupMatches from './components/GroupMatches';
 import KnockoutBracket from './components/KnockoutBracket';
 import MatchView from './components/MatchView';
 import StatsView from './components/StatsView';
+import QRCodeDisplay from './components/QRCodeDisplay';
 
 function App() {
   const { state, updateState, peerId, isHost, initHost, joinHost, connectionsCount } = useTournamentState();
   const { phase, players, groups, groupMatches, knockouts, winner, settings, globalHistory, activeMatch } = state;
+
+  // Auto-join from URL query parameter (e.g. ?join=DART-XYZW)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinCode = params.get('join');
+    if (joinCode && phase === PHASES.LOBBY) {
+      // Clean URL without reloading
+      window.history.replaceState({}, '', window.location.pathname);
+      joinHost(joinCode);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setPhase = (newPhase) => updateState({ phase: newPhase });
 
@@ -278,10 +290,7 @@ function App() {
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {peerId && (
-              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem' }}>
-                <div style={{ color: 'var(--text-secondary)' }}>{isHost ? 'Room Code' : 'Connected to Room'}</div>
-                <div style={{ fontWeight: 'bold', letterSpacing: '2px', color: 'var(--accent-color)' }}>{peerId}</div>
-              </div>
+              <QRCodeDisplay peerId={peerId} isHost={isHost} />
           )}
 
           {(phase > PHASES.SETUP_GROUPS || (settings?.mode === '1v1' && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
