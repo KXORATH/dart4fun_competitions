@@ -112,11 +112,27 @@ function App() {
   };
 
   const handlePlayGroupMatch = (groupId, matchId) => {
-    updateState({ activeMatch: { type: 'group', groupId, matchId }, phase: PHASES.MATCH_VIEW });
+    const newGroupsMatches = { ...groupMatches };
+    const mIdx = newGroupsMatches[groupId].findIndex(m => m.id === matchId);
+    if (mIdx >= 0) {
+        newGroupsMatches[groupId] = newGroupsMatches[groupId].map((m, i) => i === mIdx ? { ...m, liveState: { ...(m.liveState || {}), operatorId: peerId || 'HOST' } } : m);
+    }
+    updateState({ activeMatch: { type: 'group', groupId, matchId }, groupMatches: newGroupsMatches, phase: PHASES.MATCH_VIEW });
   };
 
   const handlePlayKnockoutMatch = (roundId, matchId) => {
-    updateState({ activeMatch: { type: 'knockout', roundId, matchId }, phase: PHASES.MATCH_VIEW });
+    const newKnockouts = [...knockouts];
+    const rIdx = newKnockouts.findIndex(r => r.id === roundId);
+    if (rIdx >= 0) {
+        const mIdx = newKnockouts[rIdx].matches.findIndex(m => m.id === matchId);
+        if (mIdx >= 0) {
+           newKnockouts[rIdx] = {
+               ...newKnockouts[rIdx],
+               matches: newKnockouts[rIdx].matches.map((bm, i) => i === mIdx ? { ...bm, liveState: { ...(bm.liveState || {}), operatorId: peerId || 'HOST' } } : bm)
+           };
+        }
+    }
+    updateState({ activeMatch: { type: 'knockout', roundId, matchId }, knockouts: newKnockouts, phase: PHASES.MATCH_VIEW });
   };
 
   const handleMatchFinish = (p1Legs, p2Legs, matchHistory) => {
@@ -370,7 +386,13 @@ function App() {
             settings={{ ...settings, bestOf: activeMatch.type === 'knockout' ? settings.knockoutBestOf : settings.bestOf }}
             onMatchFinish={handleMatchFinish}
             onLiveUpdate={handleMatchLiveUpdate}
-            onBack={() => setPhase(activeMatch.type === 'single' ? PHASES.SETUP_SETTINGS : (activeMatch.type === 'group' ? PHASES.GROUP_STAGE : PHASES.KNOCKOUT_STAGE))}
+            onBack={() => {
+                const liveData = getActiveMatchData()?.liveState;
+                if (liveData) {
+                    handleMatchLiveUpdate({ ...liveData, operatorId: null });
+                }
+                setPhase(activeMatch.type === 'single' ? PHASES.SETUP_SETTINGS : (activeMatch.type === 'group' ? PHASES.GROUP_STAGE : PHASES.KNOCKOUT_STAGE));
+            }}
           />
         )}
 
