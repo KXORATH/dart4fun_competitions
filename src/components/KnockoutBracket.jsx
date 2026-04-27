@@ -40,9 +40,9 @@ export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', flexWrap: 'wrap' }}>
+      <div className="knockout-rounds">
         {matches.map((round) => (
-          <div key={round.id} style={{ display: 'flex', flexDirection: 'column', gap: '2rem', minWidth: '300px' }}>
+          <div key={round.id} className="knockout-round">
             <h3 style={{ textAlign: 'center', color: 'var(--accent-color)' }}>{round.name}</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'center', flex: 1 }}>

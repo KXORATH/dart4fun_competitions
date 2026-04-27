@@ -212,6 +212,75 @@ input:focus, select:focus {
   background: rgba(25, 28, 36, 0.9);
 }
 
+/* Group Stage Header */
+.group-stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.group-stage-header-left {
+  width: 120px;
+}
+.group-stage-header-right {
+  width: 220px;
+  text-align: right;
+}
+
+/* Group Match Cards */
+.group-match-card {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  overflow: hidden;
+}
+.group-match-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+}
+.group-match-player {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.group-match-player-left {
+  text-align: right;
+}
+.group-match-player-right {
+  text-align: left;
+}
+.group-match-center {
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.group-match-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  min-width: 95px;
+  white-space: nowrap;
+}
+
+/* Knockout layout */
+.knockout-rounds {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+.knockout-round {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  min-width: 300px;
+}
+
 /* Grid Layouts */
 .grid-cols-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
 .grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
@@ -220,6 +289,38 @@ input:focus, select:focus {
 @media (max-width: 768px) {
   .grid-cols-2, .grid-cols-3, .grid-cols-4 {
     grid-template-columns: 1fr;
+  }
+
+  /* Group stage header: stack vertically on mobile */
+  .group-stage-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .group-stage-header-left,
+  .group-stage-header-right {
+    width: 100%;
+    text-align: center;
+  }
+  .proceed-knockout-btn {
+    width: 100%;
+  }
+
+  /* Group match cards: smaller button on mobile */
+  .group-match-btn {
+    min-width: 75px;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.35rem;
+  }
+
+  /* Knockout: single column on mobile */
+  .knockout-rounds {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .knockout-round {
+    min-width: unset;
+    width: 100%;
   }
 }
 

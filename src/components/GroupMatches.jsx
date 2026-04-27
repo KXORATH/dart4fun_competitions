@@ -14,8 +14,8 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, o
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ width: '120px' }}>
+      <div className="group-stage-header">
+        <div className="group-stage-header-left">
           {!isMultiGuest && (
             <button className="secondary" onClick={onBack}>
               <ArrowLeft size={18} /> Back
@@ -23,11 +23,12 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, o
           )}
         </div>
         <h2 style={{ margin: 0 }}>Group Stage</h2>
-        <div style={{ width: '220px', textAlign: 'right' }}>
+        <div className="group-stage-header-right">
           {!isMultiGuest && (
             <button 
               onClick={onProceedToKnockout} 
               disabled={!isAllMatchesFinished()}
+              className="proceed-knockout-btn"
               style={{ background: isAllMatchesFinished() ? 'var(--success-color)' : 'var(--accent-color)' }}
             >
               Proceed to Knockouts <ArrowRight size={18} />
@@ -82,34 +83,29 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, o
               <h4 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Matches</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {matches.map(m => (
-                  <div key={m.id} style={{ 
-                    background: 'rgba(0,0,0,0.2)',
-                    padding: '0.5rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--panel-border)'
-                  }}>
-                    <div style={{ position: 'relative', width: '100%', minHeight: '2.5rem', display: 'flex', alignItems: 'center' }}>
-                      <div style={{ width: '50%', paddingRight: '70px', textAlign: 'right', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div key={m.id} className="group-match-card">
+                    <div className="group-match-row">
+                      <div className="group-match-player group-match-player-left">
                         {m.player1.name}
                       </div>
                       
-                      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', zIndex: 10 }}>
+                      <div className="group-match-center">
                         {m.isFinished ? (
                           <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent-color)' }}>
                             {m.p1Legs} - {m.p2Legs}
                           </div>
                         ) : m.liveState ? (
-                          <button onClick={() => onPlayMatch(group.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', minWidth: '95px', background: 'var(--warning-color)', color: '#000' }}>
+                          <button onClick={() => onPlayMatch(group.id, m.id)} className="group-match-btn" style={{ background: 'var(--warning-color)', color: '#000' }}>
                             Continue
                           </button>
                         ) : (
-                          <button onClick={() => onPlayMatch(group.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', minWidth: '95px' }}>
+                          <button onClick={() => onPlayMatch(group.id, m.id)} className="group-match-btn">
                             Play Match
                           </button>
                         )}
                       </div>
 
-                      <div style={{ width: '50%', paddingLeft: '70px', textAlign: 'left', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div className="group-match-player group-match-player-right">
                         {m.player2.name}
                       </div>
                     </div>
