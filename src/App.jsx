@@ -307,6 +307,7 @@ function App() {
         {phase === PHASES.SETUP_GROUPS && (
           <GroupSetup 
             players={players} 
+            settings={settings}
             onBack={() => setPhase(PHASES.SETUP_SETTINGS)}
             onGroupsCreated={handleGroupsCreated}
           />

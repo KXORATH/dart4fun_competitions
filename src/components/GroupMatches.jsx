@@ -78,26 +78,26 @@ export default function GroupMatches({ groups, groupMatches, onPlayMatch, onProc
                     borderRadius: '8px',
                     border: '1px solid var(--panel-border)'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between'
-                    }}>
-                      <div style={{ flex: 1, textAlign: 'right', paddingRight: '1rem', fontWeight: 'bold' }}>{m.player1.name}</div>
+                    <div style={{ position: 'relative', width: '100%', minHeight: '2.5rem', display: 'flex', alignItems: 'center' }}>
+                      <div style={{ width: '50%', paddingRight: '70px', textAlign: 'right', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {m.player1.name}
+                      </div>
                       
-                      <div className="flex gap-2 items-center justify-center" style={{ width: '120px' }}>
+                      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', zIndex: 10 }}>
                         {m.isFinished ? (
                           <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent-color)' }}>
                             {m.p1Legs} - {m.p2Legs}
                           </div>
                         ) : (
-                          <button onClick={() => onPlayMatch(group.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>
+                          <button onClick={() => onPlayMatch(group.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', minWidth: '95px' }}>
                             Play Match
                           </button>
                         )}
                       </div>
 
-                      <div style={{ flex: 1, paddingLeft: '1rem', fontWeight: 'bold' }}>{m.player2.name}</div>
+                      <div style={{ width: '50%', paddingLeft: '70px', textAlign: 'left', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {m.player2.name}
+                      </div>
                     </div>
                     {m.judge && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.5rem' }}>

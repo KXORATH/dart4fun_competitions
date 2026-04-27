@@ -152,6 +152,66 @@ input:focus, select:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Dart Animation CSS */
+.dart-hidden {
+  opacity: 0;
+  transform: translate(-100px, 150px) rotate(-15deg);
+}
+
+.dart-hover {
+  animation: dartHover 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes dartHover {
+  from { transform: translate(-120px, 150px) rotate(-20deg) scale(1.1); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translate(-120px, 130px) rotate(-25deg) scale(1.1); opacity: 1; }
+}
+
+.dart-fly {
+  animation: dartFly 0.4s cubic-bezier(0.3, 0, 0.2, 1) forwards;
+}
+
+@keyframes dartFly {
+  0% { transform: translate(-120px, 130px) rotate(-25deg) scale(1.1); opacity: 1; }
+  100% { transform: translate(-30px, -30px) rotate(0deg) scale(1); opacity: 1; } /* -30px to offset dart point center to center of dartboard */
+}
+
+.dart-embedded {
+  transform: translate(-30px, -30px) rotate(0deg) scale(1);
+  opacity: 1;
+}
+
+.board-hit {
+  animation: boardShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes boardShake {
+  10%, 90% { transform: translate3d(-1px, 0, 0) scale(0.98); }
+  20%, 80% { transform: translate3d(2px, -1px, 0) scale(1.02); }
+  30%, 50%, 70% { transform: translate3d(-2px, 1px, 0); }
+  40%, 60% { transform: translate3d(2px, 0, 0); }
+}
+
+.reveal-text {
+  animation: textPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes textPop {
+  0% { transform: scale(0.5); opacity: 0; filter: blur(4px); }
+  100% { transform: scale(1); opacity: 1; filter: blur(0); }
+}
+
+.group-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.highlight-group {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.3), inset 0 0 0 2px var(--success-color);
+  transform: translateY(-8px);
+  background: rgba(25, 28, 36, 0.9);
+}
+
 /* Grid Layouts */
 .grid-cols-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
 .grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
@@ -187,6 +247,10 @@ input:focus, select:focus {
 .badge-break { background-color: #ef4444; color: #ffffff; font-size: 0.65rem; }
 
 /* MatchView CSS Classes (Desktop default) */
+.match-view-wrapper {
+  display: flex;
+  flex-direction: column;
+}
 .match-stats-row {
   margin-bottom: 2rem;
 }
@@ -311,42 +375,85 @@ input:focus, select:focus {
   .scoreboard-panel {
     padding: 0.5rem 1rem;
     margin-bottom: 0.5rem;
+    height: 140px; /* Fixed height to prevent jumping */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .match-view-header {
-    margin-bottom: 0.25rem !important;
+    margin-bottom: 0.5rem !important;
+    min-height: 28px;
   }
   .match-stats-row {
     margin-bottom: 0.25rem;
     padding: 0 0.5rem !important;
+    height: 70px; /* Fixed height to prevent jumping */
+  }
+  .match-view-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background-color: var(--bg-color);
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.1), transparent 25%);
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
   .input-panel {
-    padding: 0.75rem !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0 !important;
   }
   .input-prompt {
     margin-bottom: 0.5rem;
     font-size: 0.95rem;
+    height: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .input-display-box {
     padding: 0.5rem;
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    min-height: 55px;
+    height: 60px; /* Force strict height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .numpad-grid {
-    gap: 0.35rem;
+    flex: 1;
+    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;
   }
   .numpad-btn {
-    font-size: 1.25rem;
-    padding: 0.6rem;
+    height: 100% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 1.5rem;
   }
   .submit-btn {
-    margin-top: 0.5rem;
-    padding: 0.8rem;
-    font-size: 1.2rem;
+    flex: 0 0 auto;
+    height: 3.5rem;
+    margin-top: 0.5rem !important;
+    padding: 0.5rem;
+    font-size: 1.25rem;
   }
   .score-cell {
     font-size: 3.2rem;
     width: 35%;
+    white-space: nowrap; /* Prevent wrapping if numbers are weirdly large */
   }
   .legs-cell {
     width: 30%;

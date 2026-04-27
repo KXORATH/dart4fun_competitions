@@ -19,7 +19,7 @@ const INITIAL_STATE = {
   groupMatches: {},
   knockouts: [],
   winner: null,
-  settings: { mode: '1v1', startingScore: 501, checkoutType: 'double', bestOf: 3, knockoutBestOf: 3 },
+  settings: { mode: '1v1', startingScore: 501, checkoutType: 'double', bestOf: 3, knockoutBestOf: 3, showGroupDrawAnimation: true },
   globalHistory: [],
   activeMatch: null
 };

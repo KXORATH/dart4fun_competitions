@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, Shuffle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { generateRoundRobin } from '../lib/tournamentUtils';
+import GroupDrawAnimation from './GroupDrawAnimation';
 
-export default function GroupSetup({ players, onBack, onGroupsCreated }) {
+export default function GroupSetup({ players, settings, onBack, onGroupsCreated }) {
   const [numGroups, setNumGroups] = useState(1);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawData, setDrawData] = useState([]);
+  const [initialGroups, setInitialGroups] = useState([]);
+  const [initialMatches, setInitialMatches] = useState({});
 
   const maxGroups = Math.max(1, Math.floor(players.length / 3)); // At least 3 players per group
 
@@ -13,7 +18,7 @@ export default function GroupSetup({ players, onBack, onGroupsCreated }) {
     const shuffled = [...players].sort(() => 0.5 - Math.random());
     const groups = [];
     
-    // Initialize groups
+    // Initialize empty groups
     for (let i = 0; i < numGroups; i++) {
         groups.push({
             id: uuidv4(),
@@ -22,19 +27,60 @@ export default function GroupSetup({ players, onBack, onGroupsCreated }) {
         });
     }
 
-    // Distribute players
+    const drawSequence = [];
+
+    // Distribute players unpredictably but balanced
+    const slots = [];
+    for (let i = 0; i < players.length; i++) {
+        slots.push(i % numGroups);
+    }
+    // Shuffle slots
+    slots.sort(() => 0.5 - Math.random());
+
     shuffled.forEach((player, index) => {
-        groups[index % numGroups].players.push(player);
+        const groupIndex = slots[index];
+        const targetGroup = groups[groupIndex];
+        
+        targetGroup.players.push(player);
+        
+        drawSequence.push({
+            player,
+            groupId: targetGroup.id
+        });
     });
 
-    // Generate matches for each group
-    const initialMatches = {};
+    // Generate matches for each fully populated group
+    const generatedMatches = {};
     groups.forEach(g => {
-        initialMatches[g.id] = generateRoundRobin(g.players);
+        generatedMatches[g.id] = generateRoundRobin(g.players);
     });
 
-    onGroupsCreated(groups, initialMatches);
+    setInitialGroups(groups);
+    setInitialMatches(generatedMatches);
+    setDrawData(drawSequence);
+    setIsDrawing(true);
   };
+
+  const handleFinishDraw = () => {
+    onGroupsCreated(initialGroups, initialMatches);
+  };
+
+  if (isDrawing) {
+    if (settings?.showGroupDrawAnimation === false) {
+       // Avoid React warning about updating state during render by using effect or just immediately trigger
+       // Actually rendering nothing and firing callback on mount is safer
+       setTimeout(handleFinishDraw, 0);
+       return <div className="glass-panel text-center">Generating Groups...</div>;
+    }
+
+    return (
+      <GroupDrawAnimation 
+        drawData={drawData} 
+        initialGroups={initialGroups} 
+        onFinish={handleFinishDraw} 
+      />
+    );
+  }
 
   return (
     <div className="glass-panel animate-slide-up" style={{ maxWidth: '600px', margin: '0 auto' }}>

@@ -86,6 +86,19 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
         </select>
       </div>
 
+      <div style={{ marginBottom: '2rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+          Group Draw Animation
+        </label>
+        <select 
+          value={settings.showGroupDrawAnimation !== false ? 'yes' : 'no'} 
+          onChange={(e) => updateSetting('showGroupDrawAnimation', e.target.value === 'yes')}
+        >
+          <option value="yes">Yes (Show cool dart animation)</option>
+          <option value="no">No (Skip directly to groups)</option>
+        </select>
+      </div>
+
       <div className="flex" style={{ justifyContent: 'space-between' }}>
         <button className="secondary" onClick={onBack}>
           <ArrowLeft size={18} /> Back
