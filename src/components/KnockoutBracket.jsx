@@ -69,9 +69,9 @@ export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch
                       </div>
 
                       {!m.isFinished && m.liveState ? (
-                        <div style={{ fontSize: '0.8rem', color: 'var(--warning-color)', fontWeight: 'bold', marginTop: '0.5rem', textAlign: 'center' }}>
-                            In game
-                        </div>
+                        <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--warning-color)', color: '#000' }}>
+                          Continue
+                        </button>
                       ) : !m.isFinished && (
                         <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
                           Play Match
