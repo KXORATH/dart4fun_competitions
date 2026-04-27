@@ -2,7 +2,7 @@ import React from 'react';
 import { calculateGroupStandings } from '../lib/tournamentUtils';
 import { Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function GroupMatches({ groups, groupMatches, onPlayMatch, onProceedToKnockout, onBack }) {
+export default function GroupMatches({ groups, groupMatches, isHost, settings, onPlayMatch, onProceedToKnockout, onBack }) {
   
   // handleScoreChange removed since we use MatchView now
 
@@ -10,20 +10,30 @@ export default function GroupMatches({ groups, groupMatches, onPlayMatch, onProc
     return Object.values(groupMatches).flat().every(m => m.isFinished);
   };
 
+  const isMultiGuest = settings?.mode === 'multi_judge' && !isHost;
+
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <button className="secondary" onClick={onBack}>
-          <ArrowLeft size={18} /> Back
-        </button>
+        <div style={{ width: '120px' }}>
+          {!isMultiGuest && (
+            <button className="secondary" onClick={onBack}>
+              <ArrowLeft size={18} /> Back
+            </button>
+          )}
+        </div>
         <h2 style={{ margin: 0 }}>Group Stage</h2>
-        <button 
-          onClick={onProceedToKnockout} 
-          disabled={!isAllMatchesFinished()}
-          style={{ background: isAllMatchesFinished() ? 'var(--success-color)' : 'var(--accent-color)' }}
-        >
-          Proceed to Knockouts <ArrowRight size={18} />
-        </button>
+        <div style={{ width: '220px', textAlign: 'right' }}>
+          {!isMultiGuest && (
+            <button 
+              onClick={onProceedToKnockout} 
+              disabled={!isAllMatchesFinished()}
+              style={{ background: isAllMatchesFinished() ? 'var(--success-color)' : 'var(--accent-color)' }}
+            >
+              Proceed to Knockouts <ArrowRight size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid-cols-2">
@@ -87,6 +97,10 @@ export default function GroupMatches({ groups, groupMatches, onPlayMatch, onProc
                         {m.isFinished ? (
                           <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent-color)' }}>
                             {m.p1Legs} - {m.p2Legs}
+                          </div>
+                        ) : m.liveState ? (
+                          <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', minWidth: '95px', color: 'var(--warning-color)', fontWeight: 'bold', textAlign: 'center' }}>
+                            In game
                           </div>
                         ) : (
                           <button onClick={() => onPlayMatch(group.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', minWidth: '95px' }}>

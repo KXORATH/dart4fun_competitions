@@ -170,6 +170,33 @@ function App() {
       });
   };
 
+  const getAllHistory = useCallback(() => {
+      let allH = [...globalHistory];
+      
+      // Merge live histories from group matches
+      Object.values(groupMatches).flat().forEach(m => {
+          if (!m.isFinished && m.liveState?.history) {
+              allH.push(...m.liveState.history);
+          }
+      });
+      
+      // Merge live histories from knockout matches
+      knockouts.forEach(r => {
+          r.matches.forEach(m => {
+              if (!m.isFinished && m.liveState?.history) {
+                  allH.push(...m.liveState.history);
+              }
+          });
+      });
+      
+      // If single active match has live history
+      if (activeMatch?.type === 'single' && getActiveMatchData()?.liveState?.history) {
+          allH.push(...getActiveMatchData().liveState.history);
+      }
+      
+      return allH;
+  }, [globalHistory, groupMatches, knockouts, activeMatch]);
+
   // updateState is now stable (useCallback with no deps in useTournamentState),
   // so this callback won't be recreated on every render — breaking the update loop
   const handleMatchLiveUpdate = useCallback((liveState) => {
@@ -317,6 +344,8 @@ function App() {
           <GroupMatches 
             groups={groups}
             groupMatches={groupMatches}
+            isHost={isHost}
+            settings={settings}
             onPlayMatch={handlePlayGroupMatch}
             onProceedToKnockout={startKnockouts}
             onBack={() => setPhase(PHASES.SETUP_GROUPS)}
@@ -326,6 +355,8 @@ function App() {
         {phase === PHASES.KNOCKOUT_STAGE && (
           <KnockoutBracket
             matches={knockouts}
+            isHost={isHost}
+            settings={settings}
             onPlayMatch={handlePlayKnockoutMatch}
             winner={winner}
             onRematch={handleRematch}
@@ -346,7 +377,7 @@ function App() {
         {phase === PHASES.STATS_VIEW && (
           <StatsView
             players={players}
-            globalHistory={activeMatch && getActiveMatchData()?.liveState ? [...globalHistory, ...(getActiveMatchData()?.liveState?.history || [])] : globalHistory}
+            globalHistory={getAllHistory()}
             settings={settings}
             onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : (settings?.mode === '1v1' ? PHASES.SETUP_SETTINGS : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE)))}
           />

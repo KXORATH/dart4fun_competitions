@@ -154,13 +154,19 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         setP2Darts(d => d + dartsThrown);
     }
 
+    const matchNameText = match.name || (match.player1 && match.player2 ? `${match.player1.name} vs ${match.player2.name}` : 'Match');
+    const currentLegNum = p1Legs + p2Legs + 1;
+
     setHistory(prev => [...prev, {
       playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
       score: isBust ? 0 : scoreVal,
       isBust,
       p1Remaining: p1Score,
       p2Remaining: p2Score,
-      dartsThrown
+      dartsThrown,
+      matchId: match.id,
+      matchName: matchNameText,
+      legNumber: currentLegNum
     }]);
 
     if (wonLeg) {
@@ -168,7 +174,10 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
             playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
             type: 'LEG_WIN',
             numDarts: (currentPlayer === 1 ? p1Darts : p2Darts) + dartsThrown,
-            checkout: scoreVal
+            checkout: scoreVal,
+            matchId: match.id,
+            matchName: matchNameText,
+            legNumber: currentLegNum
         }]);
         handleLegWin(currentPlayer);
     } else {

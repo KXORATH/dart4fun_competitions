@@ -1,16 +1,22 @@
 import React from 'react';
 import { Trophy, ArrowLeft } from 'lucide-react';
 
-export default function KnockoutBracket({ matches, onPlayMatch, winner, onRematch, onBack }) {
+export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch, winner, onRematch, onBack }) {
+  
+  const isMultiGuest = settings?.mode === 'multi_judge' && !isHost;
   
   // Score changes are now handled by MatchView
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <button className="secondary" onClick={onBack}>
-          <ArrowLeft size={18} /> Back
-        </button>
+        <div style={{ width: '80px' }}>
+          {!isMultiGuest && (
+            <button className="secondary" onClick={onBack}>
+              <ArrowLeft size={18} /> Back
+            </button>
+          )}
+        </div>
         <h2 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Knockout Stage</h2>
         <div style={{ width: '80px' }}></div>
       </div>
@@ -26,9 +32,11 @@ export default function KnockoutBracket({ matches, onPlayMatch, winner, onRematc
           <Trophy size={64} color="#fbbf24" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ margin: 0, color: '#fbbf24' }}>Tournament Champion</h2>
           <h1 style={{ fontSize: '3rem', margin: '1rem 0' }}>{winner.name}</h1>
-          <button onClick={onRematch} style={{ marginTop: '1rem', background: '#fbbf24', color: '#000' }}>
-            Start Another Tournament
-          </button>
+          {!isMultiGuest && (
+            <button onClick={onRematch} style={{ marginTop: '1rem', background: '#fbbf24', color: '#000' }}>
+              Start Another Tournament
+            </button>
+          )}
         </div>
       )}
 
@@ -60,7 +68,11 @@ export default function KnockoutBracket({ matches, onPlayMatch, winner, onRematc
                          {m.isFinished && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p2Legs}</span>}
                       </div>
 
-                      {!m.isFinished && (
+                      {!m.isFinished && m.liveState ? (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--warning-color)', fontWeight: 'bold', marginTop: '0.5rem', textAlign: 'center' }}>
+                            In game
+                        </div>
+                      ) : !m.isFinished && (
                         <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
                           Play Match
                         </button>
