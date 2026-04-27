@@ -24,6 +24,64 @@ const INITIAL_STATE = {
   activeMatch: null
 };
 
+const processIncomingState = (prev, payload, isHost) => {
+  if (payload.settings?.mode === 'multi_judge') {
+    let newPhase = prev.phase;
+    let newActiveMatch = prev.activeMatch;
+
+    if (!isHost) {
+        if (prev.phase <= PHASES.SETUP_GROUPS && payload.phase >= PHASES.GROUP_STAGE) {
+            newPhase = payload.phase;
+        } else if (prev.phase === PHASES.GROUP_STAGE && payload.phase === PHASES.KNOCKOUT_STAGE) {
+            newPhase = payload.phase;
+            newActiveMatch = null;
+        } else if (prev.phase >= PHASES.GROUP_STAGE && payload.phase === PHASES.SETUP_GROUPS) {
+            newPhase = payload.phase;
+            newActiveMatch = null;
+        }
+    }
+
+    const mergedGroupMatches = { ...payload.groupMatches };
+    if (prev.activeMatch?.type === 'group') {
+        const gId = prev.activeMatch.groupId;
+        const mId = prev.activeMatch.matchId;
+        const myMatch = prev.groupMatches[gId]?.find(m => m.id === mId);
+        const theirMatch = mergedGroupMatches[gId]?.find(m => m.id === mId);
+        if (myMatch && theirMatch && !theirMatch.isFinished) {
+            mergedGroupMatches[gId] = mergedGroupMatches[gId].map(m => m.id === mId ? myMatch : m);
+        }
+    }
+    
+    const mergedKnockouts = [ ...payload.knockouts ];
+    if (prev.activeMatch?.type === 'knockout') {
+        const rId = prev.activeMatch.roundId;
+        const mId = prev.activeMatch.matchId;
+        const rIdx = prev.knockouts.findIndex(r => r.id === rId);
+        const myMatch = prev.knockouts[rIdx]?.matches.find(m => m.id === mId);
+        
+        const theirRoundIdx = mergedKnockouts.findIndex(r => r.id === rId);
+        if (theirRoundIdx >= 0) {
+            const theirMatch = mergedKnockouts[theirRoundIdx].matches.find(m => m.id === mId);
+            if (myMatch && theirMatch && !theirMatch.isFinished) {
+                mergedKnockouts[theirRoundIdx] = {
+                   ...mergedKnockouts[theirRoundIdx],
+                   matches: mergedKnockouts[theirRoundIdx].matches.map(m => m.id === mId ? myMatch : m)
+                };
+            }
+        }
+    }
+
+    return {
+      ...payload,
+      groupMatches: mergedGroupMatches,
+      knockouts: mergedKnockouts,
+      phase: newPhase,
+      activeMatch: newActiveMatch
+    };
+  }
+  return payload;
+};
+
 export function useTournamentState() {
   const [state, setState] = useState(INITIAL_STATE);
   const [peerId, setPeerId] = useState(null);
@@ -97,10 +155,13 @@ export function useTournamentState() {
 
       conn.on('data', (data) => {
         if (data.type === 'STATE_UPDATE') {
-          setState(data.payload);
-          connectionsRef.current
-            .filter(c => c.peer !== conn.peer && c.open)
-            .forEach(c => c.send({ type: 'STATE_UPDATE', payload: data.payload }));
+          setState(prev => {
+            const newState = processIncomingState(prev, data.payload, true);
+            connectionsRef.current
+              .filter(c => c.peer !== conn.peer && c.open)
+              .forEach(c => c.send({ type: 'STATE_UPDATE', payload: newState }));
+            return newState;
+          });
         }
       });
 
@@ -144,7 +205,7 @@ export function useTournamentState() {
 
       conn.on('data', (data) => {
         if (data.type === 'STATE_UPDATE') {
-          setState(data.payload);
+          setState(prev => processIncomingState(prev, data.payload, false));
         }
       });
 

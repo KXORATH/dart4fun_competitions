@@ -21,6 +21,7 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
         >
           <option value="1v1">1v1 Quick Match</option>
           <option value="tournament">Tournament (Groups & Knockout)</option>
+          <option value="multi_judge">Multi-device Tournament</option>
         </select>
       </div>
 
