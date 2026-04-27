@@ -375,85 +375,43 @@ input:focus, select:focus {
   .scoreboard-panel {
     padding: 0.5rem 1rem;
     margin-bottom: 0.5rem;
-    height: 140px; /* Fixed height to prevent jumping */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
   }
   .match-view-header {
-    margin-bottom: 0.5rem !important;
-    min-height: 28px;
+    margin-bottom: 0.25rem !important;
   }
   .match-stats-row {
     margin-bottom: 0.25rem;
     padding: 0 0.5rem !important;
-    height: 70px; /* Fixed height to prevent jumping */
-  }
-  .match-view-wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 100;
-    background-color: var(--bg-color);
-    background-image: 
-      radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-      radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.1), transparent 25%);
-    display: flex;
-    flex-direction: column;
-    padding: 0.5rem;
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
   .input-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 0 !important;
+    padding: 0.75rem !important;
   }
   .input-prompt {
     margin-bottom: 0.5rem;
     font-size: 0.95rem;
-    height: 24px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .input-display-box {
     padding: 0.5rem;
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    height: 60px; /* Force strict height */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 55px;
   }
   .numpad-grid {
-    flex: 1;
-    gap: 0.5rem;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 1fr;
+    gap: 0.35rem;
   }
   .numpad-btn {
-    height: 100% !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
     font-size: 1.5rem;
+    padding: 1.25rem 0.5rem; /* Much taller vertically */
   }
   .submit-btn {
-    flex: 0 0 auto;
-    height: 3.5rem;
-    margin-top: 0.5rem !important;
-    padding: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 1.25rem 0.5rem; /* Much taller vertically */
     font-size: 1.25rem;
+    width: 100%;
   }
   .score-cell {
     font-size: 3.2rem;
     width: 35%;
-    white-space: nowrap; /* Prevent wrapping if numbers are weirdly large */
   }
   .legs-cell {
     width: 30%;
