@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, Shuffle } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+import { generateId } from '../lib/idUtils';
 import { generateRoundRobin } from '../lib/tournamentUtils';
 import GroupDrawAnimation from './GroupDrawAnimation';
 
@@ -21,7 +21,7 @@ export default function GroupSetup({ players, settings, onBack, onGroupsCreated 
     // Initialize empty groups
     for (let i = 0; i < numGroups; i++) {
         groups.push({
-            id: uuidv4(),
+            id: generateId(),
             name: `Group ${String.fromCharCode(65 + i)}`,
             players: []
         });
@@ -66,7 +66,7 @@ export default function GroupSetup({ players, settings, onBack, onGroupsCreated 
   };
 
   if (isDrawing) {
-    if (settings?.showGroupDrawAnimation === false) {
+    if (settings && settings.showGroupDrawAnimation === false) {
        // Avoid React warning about updating state during render by using effect or just immediately trigger
        // Actually rendering nothing and firing callback on mount is safer
        setTimeout(handleFinishDraw, 0);

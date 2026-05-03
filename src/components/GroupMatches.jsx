@@ -10,7 +10,7 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, o
     return Object.values(groupMatches).flat().every(m => m.isFinished);
   };
 
-  const isMultiGuest = settings?.mode === 'multi_judge' && !isHost;
+  const isMultiGuest = (settings && settings.mode === 'multi_judge') && !isHost;
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>

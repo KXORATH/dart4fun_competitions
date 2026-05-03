@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserPlus, UserMinus, ArrowRight, ArrowLeft } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+import { generateId } from '../lib/idUtils';
 
 export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -9,7 +9,7 @@ export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
   const handleAddPlayer = (e) => {
     e.preventDefault();
     if (newPlayerName.trim()) {
-      setPlayers([...players, { id: uuidv4(), name: newPlayerName.trim() }]);
+      setPlayers([...players, { id: generateId(), name: newPlayerName.trim() }]);
       setNewPlayerName('');
     }
   };

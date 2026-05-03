@@ -3,7 +3,7 @@ import { Trophy, ArrowLeft } from 'lucide-react';
 
 export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch, winner, onRematch, onBack }) {
   
-  const isMultiGuest = settings?.mode === 'multi_judge' && !isHost;
+  const isMultiGuest = (settings && settings.mode === 'multi_judge') && !isHost;
   
   // Score changes are now handled by MatchView
 

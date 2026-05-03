@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { generateId } from './lib/idUtils';
 import { calculateGroupStandings } from './lib/tournamentUtils';
 import { useTournamentState, PHASES } from './lib/useTournamentState';
 
@@ -49,7 +49,7 @@ function App() {
         if (i < byes) {
             const p1 = advancingPlayers[playerIndex++];
             initialMatches.push({
-                id: uuidv4(),
+                id: generateId(),
                 player1: p1,
                 player2: null,
                 p1Legs: null,
@@ -61,7 +61,7 @@ function App() {
         } else {
             const p1 = advancingPlayers[playerIndex++];
             const p2 = advancingPlayers[playerIndex++];
-            initialMatches.push({ id: uuidv4(), player1: p1, player2: p2, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
+            initialMatches.push({ id: generateId(), player1: p1, player2: p2, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
         }
     }
 
@@ -79,7 +79,7 @@ function App() {
       numMatches = numMatches / 2;
       const nextMatches = [];
       for(let i=0; i<numMatches; i++) {
-        nextMatches.push({ id: uuidv4(), player1: null, player2: null, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
+        nextMatches.push({ id: generateId(), player1: null, player2: null, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
       }
       let nName = 'Round of ' + (numMatches * 2);
       if (numMatches === 4) nName = 'Quarter Finals';
@@ -187,7 +187,7 @@ function App() {
       
       // Merge live histories from group matches
       Object.values(groupMatches).flat().forEach(m => {
-          if (!m.isFinished && m.liveState?.history) {
+          if (!m.isFinished && m.liveState && m.liveState.history) {
               allH.push(...m.liveState.history);
           }
       });
@@ -195,14 +195,14 @@ function App() {
       // Merge live histories from knockout matches
       knockouts.forEach(r => {
           r.matches.forEach(m => {
-              if (!m.isFinished && m.liveState?.history) {
+              if (!m.isFinished && m.liveState && m.liveState.history) {
                   allH.push(...m.liveState.history);
               }
           });
       });
       
       // If single active match has live history
-      if (activeMatch?.type === 'single' && getActiveMatchData()?.liveState?.history) {
+      if (activeMatch && activeMatch.type === 'single' && getActiveMatchData() && getActiveMatchData().liveState && getActiveMatchData().liveState.history) {
           allH.push(...getActiveMatchData().liveState.history);
       }
       
@@ -224,7 +224,8 @@ function App() {
         const matchIndex = matches.findIndex(m => m.id === activeMatch.matchId);
         if (matchIndex < 0) return prev;
 
-        if (JSON.stringify(matches[matchIndex].liveState ?? null) === JSON.stringify(liveState)) return prev;
+        const currentLiveState = matches[matchIndex].liveState || null;
+        if (JSON.stringify(currentLiveState) === JSON.stringify(liveState)) return prev;
 
         return {
           ...prev,
@@ -243,7 +244,8 @@ function App() {
         const matchIndex = prev.knockouts[roundIndex].matches.findIndex(m => m.id === matchId);
         if (matchIndex < 0) return prev;
 
-        if (JSON.stringify(prev.knockouts[roundIndex].matches[matchIndex].liveState ?? null) === JSON.stringify(liveState)) return prev;
+        const currentLiveState = prev.knockouts[roundIndex].matches[matchIndex].liveState || null;
+        if (JSON.stringify(currentLiveState) === JSON.stringify(liveState)) return prev;
 
         const updatedKnockouts = prev.knockouts.map((round, rIdx) =>
           rIdx !== roundIndex ? round : {
@@ -256,7 +258,8 @@ function App() {
       }
 
       if (activeMatch.type === 'single') {
-          if (JSON.stringify(prev.activeMatch.liveState ?? null) === JSON.stringify(liveState)) return prev;
+          const currentLiveState = prev.activeMatch.liveState || null;
+          if (JSON.stringify(currentLiveState) === JSON.stringify(liveState)) return prev;
           return {
             ...prev,
             activeMatch: { ...prev.activeMatch, liveState }
@@ -273,10 +276,10 @@ function App() {
           return activeMatch;
       }
       if (activeMatch.type === 'group') {
-          return groupMatches[activeMatch.groupId]?.find(m => m.id === activeMatch.matchId) || null;
+          return (groupMatches[activeMatch.groupId] && groupMatches[activeMatch.groupId].find(m => m.id === activeMatch.matchId)) || null;
       } else {
           const round = knockouts.find(r => r.id === activeMatch.roundId);
-          return round?.matches?.find(m => m.id === activeMatch.matchId) || null;
+          return (round && round.matches && round.matches.find(m => m.id === activeMatch.matchId)) || null;
       }
   };
 
@@ -293,7 +296,7 @@ function App() {
               <QRCodeDisplay peerId={peerId} isHost={isHost} />
           )}
 
-          {(phase > PHASES.SETUP_GROUPS || (settings?.mode === '1v1' && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
+          {(phase > PHASES.SETUP_GROUPS || ((settings && settings.mode === '1v1') && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
               <button className="secondary" onClick={() => setPhase(PHASES.STATS_VIEW)}>View Stats</button>
           )}
         </div>
@@ -321,7 +324,7 @@ function App() {
                 if (settings.mode === '1v1') {
                     updateState({ 
                         activeMatch: {
-                           id: uuidv4(),
+                           id: generateId(),
                            type: 'single',
                            player1: players[0],
                            player2: players[1],
@@ -388,7 +391,7 @@ function App() {
             players={players}
             globalHistory={getAllHistory()}
             settings={settings}
-            onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : (settings?.mode === '1v1' ? PHASES.SETUP_SETTINGS : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE)))}
+            onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : ((settings && settings.mode === '1v1') ? PHASES.SETUP_SETTINGS : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE)))}
           />
         )}
       </main>

@@ -2,33 +2,33 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, Delete, Undo } from 'lucide-react';
 
 export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate, onBack }) {
-  console.log('[MatchView] render, match.id:', match?.id, 'onLiveUpdate type:', typeof onLiveUpdate);
+  console.log('[MatchView] render, match.id:', (match && match.id), 'onLiveUpdate type:', typeof onLiveUpdate);
 
-  const [p1Legs, setP1Legs] = useState(match.liveState?.p1Legs ?? match.p1Legs ?? 0);
-  const [p2Legs, setP2Legs] = useState(match.liveState?.p2Legs ?? match.p2Legs ?? 0);
+  const [p1Legs, setP1Legs] = useState((match.liveState && match.liveState.p1Legs !== undefined) ? match.liveState.p1Legs : (match.p1Legs !== undefined ? match.p1Legs : 0));
+  const [p2Legs, setP2Legs] = useState((match.liveState && match.liveState.p2Legs !== undefined) ? match.liveState.p2Legs : (match.p2Legs !== undefined ? match.p2Legs : 0));
   
-  const [p1Score, setP1Score] = useState(match.liveState?.p1Score ?? settings.startingScore);
-  const [p2Score, setP2Score] = useState(match.liveState?.p2Score ?? settings.startingScore);
+  const [p1Score, setP1Score] = useState((match.liveState && match.liveState.p1Score !== undefined) ? match.liveState.p1Score : settings.startingScore);
+  const [p2Score, setP2Score] = useState((match.liveState && match.liveState.p2Score !== undefined) ? match.liveState.p2Score : settings.startingScore);
 
   const [bullseyeWinner, setBullseyeWinner] = useState(() => {
-    if (match.liveState?.bullseyeWinner) return match.liveState.bullseyeWinner;
-    const hasHistory = (match.liveState?.history?.length > 0) || (match.p1Legs > 0) || (match.p2Legs > 0);
+    if (match.liveState && match.liveState.bullseyeWinner) return match.liveState.bullseyeWinner;
+    const hasHistory = (match.liveState && match.liveState.history && match.liveState.history.length > 0) || (match.p1Legs > 0) || (match.p2Legs > 0);
     return hasHistory ? 1 : null;
   });
   
-  const [currentPlayer, setCurrentPlayer] = useState(match.liveState?.currentPlayer ?? 1);
-  const [inputValue, setInputValue] = useState(match.liveState?.inputValue ?? '');
+  const [currentPlayer, setCurrentPlayer] = useState((match.liveState && match.liveState.currentPlayer !== undefined) ? match.liveState.currentPlayer : 1);
+  const [inputValue, setInputValue] = useState((match.liveState && match.liveState.inputValue !== undefined) ? match.liveState.inputValue : '');
   
-  const [history, setHistory] = useState(match.liveState?.history ?? []);
-  const [legHistory, setLegHistory] = useState(match.liveState?.legHistory ?? []);
+  const [history, setHistory] = useState((match.liveState && match.liveState.history) || []);
+  const [legHistory, setLegHistory] = useState((match.liveState && match.liveState.legHistory) || []);
   
-  const [p1Visits, setP1Visits] = useState(match.liveState?.p1Visits ?? 0);
-  const [p2Visits, setP2Visits] = useState(match.liveState?.p2Visits ?? 0);
+  const [p1Visits, setP1Visits] = useState((match.liveState && match.liveState.p1Visits !== undefined) ? match.liveState.p1Visits : 0);
+  const [p2Visits, setP2Visits] = useState((match.liveState && match.liveState.p2Visits !== undefined) ? match.liveState.p2Visits : 0);
   
-  const [p1Darts, setP1Darts] = useState(match.liveState?.p1Darts ?? 0);
-  const [p2Darts, setP2Darts] = useState(match.liveState?.p2Darts ?? 0);
+  const [p1Darts, setP1Darts] = useState((match.liveState && match.liveState.p1Darts !== undefined) ? match.liveState.p1Darts : 0);
+  const [p2Darts, setP2Darts] = useState((match.liveState && match.liveState.p2Darts !== undefined) ? match.liveState.p2Darts : 0);
   
-  const [pendingDartPrompt, setPendingDartPrompt] = useState(match.liveState?.pendingDartPrompt ?? null);
+  const [pendingDartPrompt, setPendingDartPrompt] = useState((match.liveState && match.liveState.pendingDartPrompt !== undefined) ? match.liveState.pendingDartPrompt : null);
   const lastRemoteSnapshotRef = useRef(null);
   
   const legsToWin = Math.ceil(settings.bestOf / 2);
@@ -47,10 +47,10 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     setLegHistory(match.liveState.legHistory);
     setP1Visits(match.liveState.p1Visits);
     setP2Visits(match.liveState.p2Visits);
-    setP1Darts(match.liveState.p1Darts ?? 0);
-    setP2Darts(match.liveState.p2Darts ?? 0);
-    setPendingDartPrompt(match.liveState.pendingDartPrompt ?? null);
-    setBullseyeWinner(match.liveState.bullseyeWinner ?? null);
+    setP1Darts(match.liveState.p1Darts !== undefined ? match.liveState.p1Darts : 0);
+    setP2Darts(match.liveState.p2Darts !== undefined ? match.liveState.p2Darts : 0);
+    setPendingDartPrompt(match.liveState.pendingDartPrompt !== undefined ? match.liveState.pendingDartPrompt : null);
+    setBullseyeWinner(match.liveState.bullseyeWinner !== undefined ? match.liveState.bullseyeWinner : null);
   }, [match.liveState]);
 
   useEffect(() => {

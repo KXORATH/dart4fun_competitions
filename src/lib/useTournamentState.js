@@ -25,7 +25,7 @@ const INITIAL_STATE = {
 };
 
 const processIncomingState = (prev, payload, isHost) => {
-  if (payload.settings?.mode === 'multi_judge') {
+  if (payload.settings && payload.settings.mode === 'multi_judge') {
     let newPhase = prev.phase;
     let newActiveMatch = prev.activeMatch;
 
@@ -42,22 +42,22 @@ const processIncomingState = (prev, payload, isHost) => {
     }
 
     const mergedGroupMatches = { ...payload.groupMatches };
-    if (prev.activeMatch?.type === 'group') {
+    if (prev.activeMatch && prev.activeMatch.type === 'group') {
         const gId = prev.activeMatch.groupId;
         const mId = prev.activeMatch.matchId;
-        const myMatch = prev.groupMatches[gId]?.find(m => m.id === mId);
-        const theirMatch = mergedGroupMatches[gId]?.find(m => m.id === mId);
+        const myMatch = (prev.groupMatches[gId] && prev.groupMatches[gId].find(m => m.id === mId));
+        const theirMatch = (mergedGroupMatches[gId] && mergedGroupMatches[gId].find(m => m.id === mId));
         if (myMatch && theirMatch && !theirMatch.isFinished) {
             mergedGroupMatches[gId] = mergedGroupMatches[gId].map(m => m.id === mId ? myMatch : m);
         }
     }
     
     const mergedKnockouts = [ ...payload.knockouts ];
-    if (prev.activeMatch?.type === 'knockout') {
+    if (prev.activeMatch && prev.activeMatch.type === 'knockout') {
         const rId = prev.activeMatch.roundId;
         const mId = prev.activeMatch.matchId;
         const rIdx = prev.knockouts.findIndex(r => r.id === rId);
-        const myMatch = prev.knockouts[rIdx]?.matches.find(m => m.id === mId);
+        const myMatch = (prev.knockouts[rIdx] && prev.knockouts[rIdx].matches && prev.knockouts[rIdx].matches.find(m => m.id === mId));
         
         const theirRoundIdx = mergedKnockouts.findIndex(r => r.id === rId);
         if (theirRoundIdx >= 0) {
@@ -103,7 +103,7 @@ export function useTournamentState() {
     const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
 
     // TYMCZASOWE LOGI - usuń po naprawieniu
-    console.log('[updateState] isHost:', isHostRef.current, '| connections:', connectionsRef.current.length, '| hostConn open:', hostConnRef.current?.open);
+    console.log('[updateState] isHost:', isHostRef.current, '| connections:', connectionsRef.current.length, '| hostConn open:', (hostConnRef.current && hostConnRef.current.open));
 
     if (isHostRef.current) {
       connectionsRef.current.forEach(conn => {

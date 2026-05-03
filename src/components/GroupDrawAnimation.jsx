@@ -145,7 +145,7 @@ export default function GroupDrawAnimation({ drawData, initialGroups, onFinish }
 
   const isDrawing = currentIndex < drawData.length;
   const currentDraw = isDrawing ? drawData[currentIndex] : null;
-  const targetGroupHighlight = (phase === 'hit' || phase === 'revealed') ? currentDraw?.groupId : null;
+  const targetGroupHighlight = (phase === 'hit' || phase === 'revealed') ? (currentDraw && currentDraw.groupId) : null;
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -183,7 +183,10 @@ export default function GroupDrawAnimation({ drawData, initialGroups, onFinish }
         {isDrawing && phase === 'revealed' && (
           <div className="reveal-text" style={{ position: 'absolute', bottom: '15%', zIndex: 20 }}>
              <div style={{ background: 'var(--success-color)', color: '#fff', padding: '0.5rem 1.5rem', borderRadius: '50px', fontSize: '1.5rem', fontWeight: 'bold', boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}>
-               {groups.find(g => g.id === currentDraw.groupId)?.name}
+               {(function() {
+                 const g = groups.find(g => g.id === currentDraw.groupId);
+                 return g ? g.name : '';
+               })()}
              </div>
           </div>
         )}
