@@ -6,24 +6,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dart4fun Competitions</title>
     <script>
-      // Early Error Handler
-      window.onerror = function(msg, url, lineNo, columnNo, error) {
-        var stack = (error && error.stack) ? error.stack : 'No stack trace';
-        var errorHtml = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:red;color:white;z-index:99999;padding:2rem;overflow:auto;font-family:monospace;">' +
-                        '<h1>FATAL ERROR</h1>' +
-                        '<p><strong>Message:</strong> ' + msg + '</p>' +
-                        '<p><strong>Location:</strong> ' + url + ':' + lineNo + '</p>' +
-                        '<pre>' + stack + '</pre>' +
-                        '<button onclick="location.reload()">RELOAD</button></div>';
-        if (document.body) {
-          var d = document.createElement('div');
-          d.innerHTML = errorHtml;
-          document.body.appendChild(d);
-        } else {
-          document.write(errorHtml);
+      // Early Error Handler & On-Screen Console
+      window.__logs = [];
+      function renderLogs() {
+        var d = document.getElementById('debug-console');
+        if (!d) {
+          d = document.createElement('div');
+          d.id = 'debug-console';
+          d.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);color:#0f0;z-index:99999;padding:1rem;overflow:auto;font-family:monospace;font-size:12px;';
+          if (document.body) document.body.appendChild(d);
+          else document.write(d.outerHTML);
+          d = document.getElementById('debug-console');
         }
+        if (d) {
+          d.innerHTML = '<h3>TV Debug Console</h3><button onclick="location.reload()" style="padding:10px;margin-bottom:10px;">RELOAD</button><br>' + window.__logs.join('<br><hr>');
+        }
+      }
+      
+      function logToScreen(type, args) {
+        try {
+          var msg = Array.prototype.slice.call(args).map(function(a) {
+            if (typeof a === 'object') return JSON.stringify(a);
+            return String(a);
+          }).join(' ');
+          window.__logs.push('<b>[' + type + ']</b> ' + msg);
+          if (type === 'ERROR' || type === 'EXCEPTION') renderLogs();
+        } catch(e) {}
+      }
+
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        var stack = (error && error.stack) ? error.stack : '';
+        logToScreen('EXCEPTION', [msg, url + ':' + lineNo, stack]);
         return false;
       };
+
+      var oldLog = console.log;
+      var oldErr = console.error;
+      var oldWarn = console.warn;
+      
+      console.log = function() { logToScreen('LOG', arguments); oldLog.apply(console, arguments); };
+      console.error = function() { logToScreen('ERROR', arguments); oldErr.apply(console, arguments); };
+      console.warn = function() { logToScreen('WARN', arguments); oldWarn.apply(console, arguments); };
+
       // Polyfills
       if (!Object.assign) {
         Object.assign = function(t) {
@@ -38,15 +62,12 @@
         document.write('<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"><\/script>');
       }
     </script>
-    <script type="module" crossorigin src="/dart4fun_competitions/assets/index-Cd9EOcx1.js"></script>
-    <link rel="stylesheet" crossorigin href="/dart4fun_competitions/assets/index-BpVYae1E.css">
-    <script type="module">import.meta.url;import("_").catch(()=>1);(async function* g(){})();if(location.protocol!="file:"){window.__vite_is_modern_browser=true}</script>
-    <script type="module">!function(){if(window.__vite_is_modern_browser)return;console.warn("vite: loading legacy chunks, syntax error above and the same error below should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}();</script>
+
+    
   </head>
   <body>
     <div id="root"></div>
-    <script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>
-    <script nomodule crossorigin id="vite-legacy-polyfill" src="/dart4fun_competitions/assets/polyfills-legacy-BVgwi0xt.js"></script>
-    <script nomodule crossorigin id="vite-legacy-entry" data-src="/dart4fun_competitions/assets/index-legacy-TPsUiphb.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
+    <script crossorigin id="vite-legacy-polyfill" src="/dart4fun_competitions/assets/polyfills-legacy-BVgwi0xt.js"></script>
+    <script crossorigin id="vite-legacy-entry" data-src="/dart4fun_competitions/assets/index-legacy-TPsUiphb.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
   </body>
 </html>
