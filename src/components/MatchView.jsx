@@ -35,6 +35,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const [isSpectator, setIsSpectator] = useState(false);
   const [keyboardType, setKeyboardType] = useState('standard');
   const [matchFinishedState, setMatchFinishedState] = useState(null);
+  const [scoreAnimation, setScoreAnimation] = useState(null);
   
   const holdTimeoutRef = useRef(null);
   const [isHoldingSubmit, setIsHoldingSubmit] = useState(false);
@@ -155,11 +156,45 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     }
 
     if (isBust || wonLeg) {
+        const potentialP1Legs = currentPlayer === 1 ? p1Legs + 1 : p1Legs;
+        const potentialP2Legs = currentPlayer === 2 ? p2Legs + 1 : p2Legs;
+        const isMatchFinishing = (potentialP1Legs >= legsToWin || potentialP2Legs >= legsToWin);
+        
+        speakScore(scoreVal, isBust, wonLeg, newScore, isMatchFinishing);
+        if (scoreVal >= 60 && !isBust) setScoreAnimation(scoreVal);
+
         setPendingDartPrompt({ type: wonLeg ? 'win' : 'bust', score: scoreVal, isBust });
         return;
     }
 
+    speakScore(scoreVal, false, false, newScore, false);
+    if (scoreVal >= 60) setScoreAnimation(scoreVal);
+
     processThrow(scoreVal, false, 3);
+  };
+
+  const speakScore = (scoreVal, isBust, wonLeg, remainingScore, matchFinished) => {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      
+      let text = scoreVal.toString();
+      if (isBust) text = "No score";
+      if (wonLeg && matchFinished) text = "Game shot, and the match!";
+      else if (wonLeg) text = "Game shot!";
+      
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'en-GB';
+      msg.rate = 1.05;
+      
+      msg.onend = () => {
+          if (!isBust && !wonLeg && remainingScore <= 170 && remainingScore > 1) {
+               const reqMsg = new SpeechSynthesisUtterance(`You require ${remainingScore}`);
+               reqMsg.lang = 'en-GB';
+               window.speechSynthesis.speak(reqMsg);
+          }
+      };
+      
+      window.speechSynthesis.speak(msg);
   };
 
   const processThrow = (scoreVal, isBust, dartsThrown) => {
@@ -375,6 +410,15 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                 </button>
             </div>
         </div>
+      )}
+
+      {scoreAnimation && (
+          <div 
+            className={`epic-score-animation ${scoreAnimation === 180 ? 'ton-eighty' : ''}`} 
+            onAnimationEnd={() => setScoreAnimation(null)}
+          >
+              {scoreAnimation}
+          </div>
       )}
 
       {/* Scoreboard */}

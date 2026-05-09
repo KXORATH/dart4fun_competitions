@@ -24,6 +24,16 @@ const INITIAL_STATE = {
   activeMatch: null
 };
 
+const loadState = () => {
+    try {
+        const saved = localStorage.getItem('dart4fun_state');
+        if (saved) return JSON.parse(saved);
+    } catch(e) {
+        console.error("Could not load state", e);
+    }
+    return INITIAL_STATE;
+};
+
 const processIncomingState = (prev, payload, isHost) => {
   if (payload.settings && payload.settings.mode === 'multi_judge') {
     let newPhase = prev.phase;
@@ -116,6 +126,12 @@ export function useTournamentState() {
       console.warn('[updateState] NICZEGO NIE WYSŁANO!');
     }
 
+    try {
+        if (isHostRef.current) {
+            localStorage.setItem('dart4fun_state', JSON.stringify(next));
+        }
+    } catch(e) {}
+
     return next;
   });
 }, []);
@@ -136,7 +152,11 @@ export function useTournamentState() {
       setPeerId(id);
       setIsHost(true);
       isHostRef.current = true;
-      updateState(prev => ({ ...prev, phase: PHASES.SETUP_PLAYERS, settings: { ...prev.settings, mode } }));
+      if (arguments[1] !== undefined) {
+         updateState(prev => ({ ...prev, phase: arguments[1] }));
+      } else {
+         updateState(prev => ({ ...prev, phase: PHASES.SETUP_PLAYERS, settings: { ...prev.settings, mode } }));
+      }
     });
 
     peer.on('connection', (conn) => {
@@ -214,6 +234,14 @@ export function useTournamentState() {
     peerRef.current = peer;
   }, []);
 
+  const resumeState = useCallback(() => {
+      const saved = loadState();
+      if (saved && saved !== INITIAL_STATE) {
+          setState(saved);
+          initHost(saved.settings.mode, saved.phase);
+      }
+  }, [initHost]);
+
   return {
     state,
     updateState,
@@ -221,6 +249,7 @@ export function useTournamentState() {
     isHost,
     initHost,
     joinHost,
+    resumeState,
     connectionsCount,
   };
 }

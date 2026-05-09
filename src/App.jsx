@@ -14,7 +14,7 @@ import StatsView from './components/StatsView';
 import QRCodeDisplay from './components/QRCodeDisplay';
 
 function App() {
-  const { state, updateState, peerId, isHost, initHost, joinHost, connectionsCount } = useTournamentState();
+  const { state, updateState, peerId, isHost, initHost, joinHost, resumeState, connectionsCount } = useTournamentState();
   const { phase, players, groups, groupMatches, knockouts, winner, settings, globalHistory, activeMatch } = state;
 
   // Auto-join from URL query parameter (e.g. ?join=DART-XYZW)
@@ -304,7 +304,7 @@ function App() {
 
       <main>
         {phase === PHASES.LOBBY && (
-            <Lobby onHost={initHost} onJoin={joinHost} />
+            <Lobby onHost={initHost} onJoin={joinHost} onResume={resumeState} />
         )}
         
         {phase === PHASES.SETUP_PLAYERS && (

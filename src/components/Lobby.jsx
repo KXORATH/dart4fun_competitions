@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
-import { Network, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Network, Users, PlaySquare } from 'lucide-react';
 
-export default function Lobby({ onHost, onJoin }) {
+export default function Lobby({ onHost, onJoin, onResume }) {
   const [joinCode, setJoinCode] = useState('');
+  const [hasSavedState, setHasSavedState] = useState(false);
+
+  useEffect(() => {
+      try {
+          const saved = localStorage.getItem('dart4fun_state');
+          if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed && parsed.phase > -1) {
+                  setHasSavedState(true);
+              }
+          }
+      } catch(e) {}
+  }, []);
 
   return (
     <div className="animate-slide-up" style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
@@ -12,6 +25,20 @@ export default function Lobby({ onHost, onJoin }) {
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        {hasSavedState && (
+            <div className="glass-panel" style={{ padding: '1.5rem', borderColor: 'var(--warning-color)', boxShadow: '0 4px 20px rgba(245, 158, 11, 0.15)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ textAlign: 'left' }}>
+                        <h3 style={{ margin: 0, color: 'var(--warning-color)' }}>Resume Tournament</h3>
+                        <p style={{ margin: '0.5rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>We found an active tournament saved on this device.</p>
+                    </div>
+                    <button onClick={onResume} style={{ background: 'var(--warning-color)', color: 'black' }}>
+                        <PlaySquare size={20} /> Resume
+                    </button>
+                </div>
+            </div>
+        )}
+
         <div className="glass-panel" style={{ padding: '2rem' }}>
           <Network size={48} color="var(--accent-color)" style={{ marginBottom: '1rem' }} />
           <h3 style={{ marginBottom: '1rem' }}>Start Playing</h3>
