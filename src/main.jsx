@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import React, { Component, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.jsx';
@@ -14,7 +14,7 @@ window.addEventListener('error', (e) => {
   const stack = (e.error && e.error.stack) ? e.error.stack : 'No stack trace';
   
   d.innerHTML = `
-    <h1 style="color:white;text-align:left;font-size:24px;margin-bottom:1rem;">APPLICATION ERROR</h1>
+    <h1 style="color:white;text-align:left;font-size:24px;margin-bottom:1rem;">WINDOW ERROR</h1>
     <p><strong>URL:</strong> ${window.location.href}</p>
     <p><strong>Message:</strong> ${msg}</p>
     <p><strong>Location:</strong> ${file}:${line}</p>
@@ -35,8 +35,44 @@ window.addEventListener('unhandledrejection', (e) => {
   document.body.appendChild(d);
 });
 
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error("React Error Boundary caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '2rem', background: '#330000', color: 'white', minHeight: '100vh', fontFamily: 'monospace' }}>
+          <h2>REACT ERROR BOUNDARY</h2>
+          <p><strong>Message:</strong> {this.state.error && this.state.error.toString()}</p>
+          <pre style={{ background: '#000', padding: '1rem', whiteSpace: 'pre-wrap', fontSize: '12px', marginTop: '1rem' }}>
+            {this.state.error && this.state.error.stack}
+            <br />
+            {this.state.errorInfo && this.state.errorInfo.componentStack}
+          </pre>
+          <button onClick={() => window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now()} style={{ padding: '1rem 2rem', marginTop: '2rem', background: 'white', color: 'black', fontWeight: 'bold' }}>HARD RELOAD</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
-)
+);
