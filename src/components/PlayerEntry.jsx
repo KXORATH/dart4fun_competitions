@@ -5,6 +5,7 @@ import { generateId } from '../lib/idUtils';
 export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
   const [newPlayerName, setNewPlayerName] = useState('');
   const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  const [botAverage, setBotAverage] = useState(40);
 
   const handleAddPlayer = (e) => {
     e.preventDefault();
@@ -12,6 +13,15 @@ export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
       setPlayers([...players, { id: generateId(), name: newPlayerName.trim() }]);
       setNewPlayerName('');
     }
+  };
+
+  const handleAddBot = () => {
+    setPlayers([...players, { 
+      id: generateId(), 
+      name: `DartBot (avg: ${botAverage})`, 
+      isBot: true, 
+      botAverage 
+    }]);
   };
 
   const handleRemovePlayer = (id) => {
@@ -44,7 +54,7 @@ export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
     <div className="glass-panel animate-slide-up" style={{ maxWidth: '600px', margin: '0 auto' }}>
       <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Registration Phase</h2>
       
-      <form onSubmit={handleAddPlayer} className="flex gap-2 mb-8">
+      <form onSubmit={handleAddPlayer} className="flex gap-2 mb-4">
         <input 
           type="text" 
           value={newPlayerName}
@@ -53,9 +63,30 @@ export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
           autoFocus
         />
         <button type="submit">
-          <UserPlus size={18} /> Add
+          <UserPlus size={18} /> Add Player
         </button>
       </form>
+
+      <div className="flex gap-2 mb-8 items-center" style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+                <span>DartBot</span>
+                <span style={{ fontWeight: 'bold', color: 'var(--accent-color)' }}>Avg: {botAverage}</span>
+            </div>
+            <input 
+                type="range" 
+                min="20" 
+                max="100" 
+                step="5" 
+                value={botAverage} 
+                onChange={(e) => setBotAverage(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--accent-color)' }}
+            />
+        </div>
+        <button type="button" onClick={handleAddBot} className="secondary" style={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
+          <UserPlus size={18} /> Add Bot
+        </button>
+      </div>
 
       <div style={{ marginBottom: '2rem' }}>
         <h3 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>

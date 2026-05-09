@@ -68,9 +68,12 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     setBullseyeWinner(match.liveState.bullseyeWinner !== undefined ? match.liveState.bullseyeWinner : null);
   }, [match.liveState]);
 
+  const hasSpokenGameOn = useRef(false);
+
   useEffect(() => {
-      // "Game On!" announcement
-      if (p1Legs === 0 && p2Legs === 0 && p1Visits === 0 && p2Visits === 0 && history.length === 0) {
+      // "Game On!" announcement after bullseye
+      if (bullseyeWinner && !hasSpokenGameOn.current && p1Legs === 0 && p2Legs === 0 && p1Visits === 0 && p2Visits === 0 && history.length === 0) {
+          hasSpokenGameOn.current = true;
           if ('speechSynthesis' in window) {
               const msg = new SpeechSynthesisUtterance("Game On!");
               msg.lang = 'en-GB';
@@ -78,7 +81,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
               window.speechSynthesis.speak(msg);
           }
       }
-  }, []); // Run only once on mount
+  }, [bullseyeWinner, p1Legs, p2Legs, p1Visits, p2Visits, history.length]);
 
   useEffect(() => {
     const snapshot = {
@@ -110,6 +113,74 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     lastLocalSnapshotRef.current = serializedSnapshot;
     onLiveUpdate(snapshot);
   }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, bullseyeWinner, onLiveUpdate]);
+  
+  useEffect(() => {
+      if (matchFinishedState || !bullseyeWinner || pendingDartPrompt) return;
+
+      const player = currentPlayer === 1 ? match.player1 : match.player2;
+      
+      if (player && player.isBot) {
+          const timeout = setTimeout(() => {
+              executeBotThrow(player.botAverage || 40);
+          }, 1500);
+          return () => clearTimeout(timeout);
+      }
+  }, [currentPlayer, bullseyeWinner, matchFinishedState, pendingDartPrompt, p1Score, p2Score]);
+
+  const executeBotThrow = (botAverage) => {
+      const currentScore = currentPlayer === 1 ? p1Score : p2Score;
+      let scoreVal = 0;
+      let isBust = false;
+      let dartsUsed = 3;
+      
+      const isCheckout = currentScore <= 50 || (currentScore <= 170 && [170,167,164,161,160].includes(currentScore)) || (currentScore <= 158 && currentScore !== 159);
+
+      if (isCheckout) {
+          const hitChance = botAverage / 150;
+          if (Math.random() < hitChance) {
+              scoreVal = currentScore;
+              dartsUsed = Math.ceil(Math.random() * 3);
+          } else {
+              if (Math.random() < 0.3) {
+                  isBust = true;
+                  scoreVal = 0;
+              } else {
+                  scoreVal = Math.floor(Math.random() * (currentScore - 2)); 
+                  if (currentScore - scoreVal < 2) scoreVal = currentScore - 2;
+                  if (scoreVal < 0) scoreVal = 0;
+              }
+          }
+      } else {
+          const variance = 20;
+          scoreVal = Math.floor(botAverage + (Math.random() * variance * 2 - variance));
+          
+          if (Math.random() < (botAverage / 500)) {
+              scoreVal += 40;
+          }
+          
+          if (scoreVal < 0) scoreVal = 0;
+          if (scoreVal > 180) scoreVal = 180;
+          
+          const remaining = currentScore - scoreVal;
+          if (remaining === 1 || remaining < 0) {
+              isBust = true;
+              scoreVal = 0;
+          } else if (remaining === 169 || remaining === 168 || remaining === 165 || remaining === 162 || remaining === 159) {
+              scoreVal -= 2;
+          }
+      }
+
+      const nextPlayerRemainingScore = currentPlayer === 1 ? p2Score : p1Score;
+      const wonLeg = (!isBust && scoreVal === currentScore);
+      const potentialP1Legs = currentPlayer === 1 ? p1Legs + (wonLeg ? 1 : 0) : p1Legs;
+      const potentialP2Legs = currentPlayer === 2 ? p2Legs + (wonLeg ? 1 : 0) : p2Legs;
+      const isMatchFinishing = (potentialP1Legs >= legsToWin || potentialP2Legs >= legsToWin);
+
+      speakScore(scoreVal, isBust, wonLeg, nextPlayerRemainingScore, isMatchFinishing);
+      if (scoreVal >= 60 && !isBust) setScoreAnimation(scoreVal);
+
+      processThrow(scoreVal, isBust, dartsUsed);
+  };
   
   const handleInput = (val) => {
     if (inputValue.length < 3) {
