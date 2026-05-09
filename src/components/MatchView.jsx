@@ -41,6 +41,18 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const holdStartTimeoutRef = useRef(null);
   const [isHoldingSubmit, setIsHoldingSubmit] = useState(false);
   
+  const previousHistoryLengthRef = useRef(history ? history.length : 0);
+  
+  useEffect(() => {
+    if (history && history.length > previousHistoryLengthRef.current) {
+        const lastThrow = history[history.length - 1];
+        if (lastThrow.type !== 'LEG_WIN' && !lastThrow.isBust && lastThrow.score >= 60) {
+            setScoreAnimation(lastThrow.score);
+        }
+    }
+    previousHistoryLengthRef.current = history ? history.length : 0;
+  }, [history]);
+  
   const legsToWin = Math.ceil(settings.bestOf / 2);
 
   useEffect(() => {
@@ -195,7 +207,6 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       const isMatchFinishing = (potentialP1Legs >= legsToWin || potentialP2Legs >= legsToWin);
 
       speakScore(scoreVal, isBust, wonLeg, nextPlayerRemainingScore, isMatchFinishing);
-      if (scoreVal >= 60 && !isBust) setScoreAnimation(scoreVal);
 
       processThrow(scoreVal, isBust, dartsUsed);
   };
@@ -264,14 +275,12 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         const isMatchFinishing = (potentialP1Legs >= legsToWin || potentialP2Legs >= legsToWin);
         
         speakScore(scoreVal, isBust, wonLeg, nextPlayerRemainingScore, isMatchFinishing);
-        if (scoreVal >= 60 && !isBust) setScoreAnimation(scoreVal);
 
         setPendingDartPrompt({ type: wonLeg ? 'win' : 'bust', score: scoreVal, isBust });
         return;
     }
 
     speakScore(scoreVal, false, false, nextPlayerRemainingScore, false);
-    if (scoreVal >= 60) setScoreAnimation(scoreVal);
 
     processThrow(scoreVal, false, 3);
   };

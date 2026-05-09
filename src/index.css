@@ -83,21 +83,10 @@ button {
   gap: 0.5rem;
 }
 
-button:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
 button.danger {
   background: rgba(239, 68, 68, 0.1);
   color: var(--danger-color);
   border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-button.danger:hover {
-  background: var(--danger-color);
-  color: white;
 }
 
 button.secondary {
@@ -106,8 +95,36 @@ button.secondary {
   border: 1px solid var(--panel-border);
 }
 
-button.secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+@media (hover: hover) {
+  button:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  button.danger:hover {
+    background: var(--danger-color);
+    color: white;
+  }
+
+  button.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: none;
+  background: var(--accent-hover);
+}
+
+button.danger:active {
+  background: var(--danger-color);
+  color: white;
+}
+
+button.secondary:active {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 button:disabled {
@@ -591,10 +608,17 @@ input:focus, select:focus {
   border: 1px solid var(--panel-border);
 }
 
-.qr-header-badge:hover {
-  background: rgba(255, 255, 255, 0.1);
+@media (hover: hover) {
+  .qr-header-badge:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+  }
+}
+
+.qr-header-badge:active {
+  background: rgba(255, 255, 255, 0.15);
   border-color: var(--accent-color);
-  transform: translateY(-1px);
 }
 
 .qr-small-wrapper {
@@ -664,11 +688,17 @@ input:focus, select:focus {
   cursor: pointer;
 }
 
-.qr-close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--text-primary);
-  transform: none;
-  box-shadow: none;
+@media (hover: hover) {
+  .qr-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.qr-close-btn:active {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .qr-overlay-title {
@@ -734,8 +764,15 @@ input:focus, select:focus {
   font-weight: 700;
   padding: 0.5rem !important;
 }
-.quick-score-btn:hover {
-  background: var(--accent-hover) !important;
+@media (hover: hover) {
+  .quick-score-btn:hover {
+    background: var(--accent-hover) !important;
+  }
+}
+
+.quick-score-btn:active {
+  background: var(--accent-color) !important;
+  transform: scale(0.95);
 }
 
 /* Hold-to-Submit Progress Bar */
