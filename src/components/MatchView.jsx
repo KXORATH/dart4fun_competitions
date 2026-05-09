@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Check, Delete, Undo } from 'lucide-react';
+import { ArrowLeft, Check, Delete, Undo, Eye, EyeOff, Keyboard } from 'lucide-react';
 
 export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate, onBack }) {
   console.log('[MatchView] render, match.id:', (match && match.id), 'onLiveUpdate type:', typeof onLiveUpdate);
 
-  const [p1Legs, setP1Legs] = useState((match.liveState && match.liveState.p1Legs !== undefined) ? match.liveState.p1Legs : (match.p1Legs !== undefined ? match.p1Legs : 0));
-  const [p2Legs, setP2Legs] = useState((match.liveState && match.liveState.p2Legs !== undefined) ? match.liveState.p2Legs : (match.p2Legs !== undefined ? match.p2Legs : 0));
+  const [p1Legs, setP1Legs] = useState((match.liveState && match.liveState.p1Legs !== undefined && match.liveState.p1Legs !== null) ? match.liveState.p1Legs : (match.p1Legs !== undefined && match.p1Legs !== null ? match.p1Legs : 0));
+  const [p2Legs, setP2Legs] = useState((match.liveState && match.liveState.p2Legs !== undefined && match.liveState.p2Legs !== null) ? match.liveState.p2Legs : (match.p2Legs !== undefined && match.p2Legs !== null ? match.p2Legs : 0));
   
   const [p1Score, setP1Score] = useState((match.liveState && match.liveState.p1Score !== undefined) ? match.liveState.p1Score : settings.startingScore);
   const [p2Score, setP2Score] = useState((match.liveState && match.liveState.p2Score !== undefined) ? match.liveState.p2Score : settings.startingScore);
@@ -30,15 +30,29 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   
   const [pendingDartPrompt, setPendingDartPrompt] = useState((match.liveState && match.liveState.pendingDartPrompt !== undefined) ? match.liveState.pendingDartPrompt : null);
   const lastRemoteSnapshotRef = useRef(null);
+  const lastLocalSnapshotRef = useRef(null);
+  
+  const [isSpectator, setIsSpectator] = useState(false);
+  const [keyboardType, setKeyboardType] = useState('standard');
+  const [matchFinishedState, setMatchFinishedState] = useState(null);
+  
+  const holdTimeoutRef = useRef(null);
+  const [isHoldingSubmit, setIsHoldingSubmit] = useState(false);
   
   const legsToWin = Math.ceil(settings.bestOf / 2);
 
   useEffect(() => {
     console.log('[MatchView] liveState effect uruchomiony, liveState:', match.liveState ? 'jest' : 'brak');
     if (!match.liveState) return;
-    lastRemoteSnapshotRef.current = JSON.stringify(match.liveState);
-    setP1Legs(match.liveState.p1Legs);
-    setP2Legs(match.liveState.p2Legs);
+    
+    const remoteStr = JSON.stringify(match.liveState);
+    if (remoteStr === lastLocalSnapshotRef.current || remoteStr === lastRemoteSnapshotRef.current) {
+        return; // We already processed this or it came from us
+    }
+    lastRemoteSnapshotRef.current = remoteStr;
+    
+    setP1Legs(match.liveState.p1Legs !== null ? match.liveState.p1Legs : 0);
+    setP2Legs(match.liveState.p2Legs !== null ? match.liveState.p2Legs : 0);
     setP1Score(match.liveState.p1Score);
     setP2Score(match.liveState.p2Score);
     setCurrentPlayer(match.liveState.currentPlayer);
@@ -73,16 +87,15 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     const serializedSnapshot = JSON.stringify(snapshot);
 
     console.log('[MatchView] onLiveUpdate effect uruchomiony');
-    console.log('[MatchView] snapshot === lastRemote?', serializedSnapshot === lastRemoteSnapshotRef.current);
 
-    if (serializedSnapshot === lastRemoteSnapshotRef.current) {
-      console.log('[MatchView] snapshot bez zmian, pomijam onLiveUpdate');
+    if (serializedSnapshot === lastLocalSnapshotRef.current || serializedSnapshot === lastRemoteSnapshotRef.current) {
+      console.log('[MatchView] snapshot bez zmian lub z remote, pomijam onLiveUpdate');
       return;
     }
 
     console.log('[MatchView] wywołuję onLiveUpdate, p1Score:', p1Score, 'p2Score:', p2Score);
+    lastLocalSnapshotRef.current = serializedSnapshot;
     onLiveUpdate(snapshot);
-    lastRemoteSnapshotRef.current = serializedSnapshot;
   }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, bullseyeWinner, onLiveUpdate]);
   
   const handleInput = (val) => {
@@ -95,24 +108,36 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     setInputValue(prev => prev.slice(0, -1));
   };
 
-  const handleEnter = () => {
+  const handleEnter = (isRemaining = false, forceVal = null) => {
     let scoreVal = 0;
-    if (inputValue !== '') {
-        scoreVal = parseInt(inputValue, 10);
-        if (scoreVal > 180 || scoreVal < 0) {
-            alert("Invalid score (must be 0-180)");
-            setInputValue('');
-            return;
+    const valToUse = forceVal !== null ? forceVal : inputValue;
+    const currentScore = currentPlayer === 1 ? p1Score : p2Score;
+    
+    if (valToUse !== '') {
+        let parsedVal = parseInt(valToUse, 10);
+        if (isRemaining) {
+            scoreVal = currentScore - parsedVal;
+            if (scoreVal < 0 || scoreVal > 180) {
+                 alert("Invalid remaining score (calculated throw must be 0-180)");
+                 setInputValue('');
+                 return;
+            }
+        } else {
+            scoreVal = parsedVal;
+            if (scoreVal > 180 || scoreVal < 0) {
+                alert("Invalid score (must be 0-180)");
+                setInputValue('');
+                return;
+            }
         }
     }
 
-    const currentScore = currentPlayer === 1 ? p1Score : p2Score;
     let newScore = currentScore - scoreVal;
     
     let isBust = false;
     let wonLeg = false;
 
-    if (inputValue === '') {
+    if (valToUse === '') {
         if (currentScore > 180) {
             isBust = false;
             scoreVal = 0;
@@ -199,7 +224,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       setP2Legs(newP2Legs);
       
       if (newP1Legs >= legsToWin || newP2Legs >= legsToWin) {
-          onMatchFinish(newP1Legs, newP2Legs, history);
+          setMatchFinishedState({ p1Legs: newP1Legs, p2Legs: newP2Legs });
       } else {
           setP1Score(settings.startingScore);
           setP2Score(settings.startingScore);
@@ -210,6 +235,45 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           setLegHistory([]);
           const totalLegsPlayed = newP1Legs + newP2Legs;
           setCurrentPlayer((totalLegsPlayed % 2) === 0 ? bullseyeWinner : (bullseyeWinner === 1 ? 2 : 1));
+      }
+  };
+
+  const confirmMatchFinish = () => {
+      if (matchFinishedState) {
+          onMatchFinish(matchFinishedState.p1Legs, matchFinishedState.p2Legs, history);
+      }
+  };
+
+  const undoMatchFinish = () => {
+      setMatchFinishedState(null);
+      handleUndo();
+  };
+
+  const handleQuickScore = (val) => {
+      setInputValue(val.toString());
+      handleEnter(false, val.toString());
+  };
+
+  const startHoldSubmit = (e) => {
+      if (e) { e.preventDefault(); }
+      if (inputValue === '') return;
+      setIsHoldingSubmit(true);
+      holdTimeoutRef.current = setTimeout(() => {
+          setIsHoldingSubmit(false);
+          handleEnter(true);
+          holdTimeoutRef.current = null;
+      }, 1000);
+  };
+
+  const endHoldSubmit = (e) => {
+      if (e) { e.preventDefault(); }
+      if (holdTimeoutRef.current) {
+          clearTimeout(holdTimeoutRef.current);
+          holdTimeoutRef.current = null;
+          if (isHoldingSubmit) {
+              setIsHoldingSubmit(false);
+              handleEnter(false);
+          }
       }
   };
 
@@ -289,8 +353,29 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           <h2 style={{ margin: 0 }}>Match View</h2>
           <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Best of {settings.bestOf}</p>
         </div>
-        <div style={{ width: '80px' }}></div>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="secondary" style={{ padding: '0.5rem' }} onClick={() => setIsSpectator(!isSpectator)} title="Spectator View">
+                {isSpectator ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+        </div>
       </div>
+
+      {matchFinishedState && (
+        <div className="glass-panel text-center" style={{ width: '100%', maxWidth: '400px', margin: '2rem auto', animation: 'fade-in 0.2s', zIndex: 10 }}>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--success-color)' }}>Match Finished!</h3>
+            <p style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>
+                {match.player1.name} <strong style={{color: 'white'}}>{matchFinishedState.p1Legs}</strong> - <strong style={{color: 'white'}}>{matchFinishedState.p2Legs}</strong> {match.player2.name}
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <button className="secondary" onClick={undoMatchFinish}>
+                    <Undo size={18} style={{ marginRight: '0.5rem' }} /> Undo
+                </button>
+                <button className="primary" onClick={confirmMatchFinish}>
+                    Confirm Result <Check size={18} style={{ marginLeft: '0.5rem' }} />
+                </button>
+            </div>
+        </div>
+      )}
 
       {/* Scoreboard */}
       <div className="glass-panel scoreboard-panel">
@@ -345,68 +430,98 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         </div>
       </div>
 
-      {pendingDartPrompt ? (
-        <div className="glass-panel text-center pending-panel" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', animation: 'fade-in 0.2s', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center' }}>
-            <h3 style={{ marginBottom: '1rem', color: pendingDartPrompt.type === 'win' ? 'var(--success-color)' : 'var(--danger-color)' }}>
-                {pendingDartPrompt.type === 'win' ? 'Leg Shot!' : 'Bust!'}
-            </h3>
-            <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                How many darts did you throw?
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
-                <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 1)}>1 Dart</button>
-                <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 2)}>2 Darts</button>
-                <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 3)}>3 Darts</button>
+      {!isSpectator && !matchFinishedState && (
+          pendingDartPrompt ? (
+            <div className="glass-panel text-center pending-panel" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', animation: 'fade-in 0.2s', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center' }}>
+                <h3 style={{ marginBottom: '1rem', color: pendingDartPrompt.type === 'win' ? 'var(--success-color)' : 'var(--danger-color)' }}>
+                    {pendingDartPrompt.type === 'win' ? 'Leg Shot!' : 'Bust!'}
+                </h3>
+                <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                    How many darts did you throw?
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 1)}>1 Dart</button>
+                    <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 2)}>2 Darts</button>
+                    <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 3)}>3 Darts</button>
+                </div>
+                <button className="secondary" style={{ width: '100%' }} onClick={() => setPendingDartPrompt(null)}>
+                    Cancel
+                </button>
             </div>
-            <button className="secondary" style={{ width: '100%' }} onClick={() => setPendingDartPrompt(null)}>
-                Cancel
-            </button>
-        </div>
-      ) : (
-      <div className="glass-panel input-panel" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
-        <div className="input-prompt" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-          Enter Score for <strong style={{ color: 'var(--text-primary)' }}>
-            {currentPlayer === 1 ? match.player1.name : match.player2.name}
-          </strong>
-        </div>
+          ) : (
+          <div className="glass-panel input-panel" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
+            <div className="input-prompt" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{ color: 'var(--text-secondary)' }}>
+                Enter Score for <strong style={{ color: 'var(--text-primary)' }}>
+                  {currentPlayer === 1 ? match.player1.name : match.player2.name}
+                </strong>
+              </div>
+              <button className="secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => setKeyboardType(t => t === 'standard' ? 'quick' : 'standard')} title="Switch Keyboard">
+                 <Keyboard size={16} />
+              </button>
+            </div>
 
-        <div className="input-display-box" style={{ 
-          background: 'rgba(0,0,0,0.3)', 
-          borderRadius: '12px', 
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1px solid var(--panel-border)'
-        }}>
-          {inputValue || <span style={{ opacity: 0.3 }}>0</span>}
-        </div>
+            <div className="input-display-box" style={{ 
+              background: 'rgba(0,0,0,0.3)', 
+              borderRadius: '12px', 
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid var(--panel-border)',
+              marginBottom: '1rem',
+              height: '50px',
+              fontSize: '1.5rem',
+              fontWeight: 'bold'
+            }}>
+              {inputValue || <span style={{ opacity: 0.3 }}>0</span>}
+            </div>
 
-        <div className="numpad-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          {[1,2,3,4,5,6,7,8,9].map(num => (
-            <button key={num} className="secondary numpad-btn" onClick={() => handleInput(num.toString())}>
-              {num}
+            {keyboardType === 'standard' ? (
+                <div className="numpad-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                  {[1,2,3,4,5,6,7,8,9].map(num => (
+                    <button key={num} className="secondary numpad-btn" onClick={() => handleInput(num.toString())}>
+                      {num}
+                    </button>
+                  ))}
+                  <button className="secondary numpad-btn" onClick={handleUndo}>
+                    <Undo size={24} />
+                  </button>
+                  <button className="secondary numpad-btn" onClick={() => handleInput('0')}>
+                    0
+                  </button>
+                  <button className="secondary numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
+                    <Delete size={32} strokeWidth={1.5} />
+                  </button>
+                </div>
+            ) : (
+                <div className="numpad-grid quick-scores-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                  {[26, 41, 45, 60, 81, 85, 100, 140].map(num => (
+                    <button key={num} className="secondary numpad-btn" onClick={() => handleQuickScore(num)}>
+                      {num}
+                    </button>
+                  ))}
+                  <button className="secondary numpad-btn" style={{ gridColumn: '1 / -1' }} onClick={handleUndo}>
+                      <Undo size={24} style={{ marginRight: '0.5rem' }} /> Undo
+                  </button>
+                </div>
+            )}
+            
+            <button 
+                className={`submit-btn ${isHoldingSubmit ? 'holding' : ''}`}
+                style={{ width: '100%', marginTop: '1rem', position: 'relative', overflow: 'hidden' }} 
+                onMouseDown={startHoldSubmit}
+                onMouseUp={endHoldSubmit}
+                onMouseLeave={endHoldSubmit}
+                onTouchStart={startHoldSubmit}
+                onTouchEnd={endHoldSubmit}
+            >
+              <span style={{ position: 'relative', zIndex: 2, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {isHoldingSubmit ? 'Sending Remaining...' : (inputValue === '' ? ((currentPlayer === 1 ? p1Score : p2Score) > 180 ? 'Submit 0' : 'Bust') : 'Submit Score')} <Check size={24} style={{ marginLeft: '0.5rem' }} />
+              </span>
             </button>
-          ))}
-          <button className="secondary numpad-btn" onClick={handleUndo}>
-            <Undo size={24} />
-          </button>
-          <button className="secondary numpad-btn" onClick={() => handleInput('0')}>
-            0
-          </button>
-          <button className="secondary numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
-            <Delete size={32} strokeWidth={1.5} />
-          </button>
-        </div>
-        
-        <button 
-            className="submit-btn"
-            style={{ width: '100%' }} 
-            onClick={handleEnter}
-        >
-          {inputValue === '' ? ((currentPlayer === 1 ? p1Score : p2Score) > 180 ? 'Submit 0' : 'Bust') : 'Submit Score'} <Check size={24} style={{ marginLeft: '0.5rem' }} />
-        </button>
-      </div>
+          </div>
+          )
       )}
 
     </div>

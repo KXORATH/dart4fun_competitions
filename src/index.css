@@ -725,3 +725,35 @@ input:focus, select:focus {
   }
 }
 
+/* Quick Scores Keyboard */
+.quick-scores-grid .numpad-btn {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #fff;
+  font-weight: 700;
+}
+.quick-scores-grid .numpad-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* Hold-to-Submit Progress Bar */
+.submit-btn.holding {
+  position: relative;
+}
+.submit-btn.holding::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transform-origin: left;
+  animation: progressBar 1s linear forwards;
+}
+
+@keyframes progressBar {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
