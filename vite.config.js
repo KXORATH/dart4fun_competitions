@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     legacy({
-      targets: ['> 0.5%', 'last 2 versions', 'Firefox ESR', 'not dead', 'ie 11', 'chrome 49'],
+      targets: ['> 0.5%', 'last 2 versions', 'Firefox ESR', 'not dead', 'ie 11', 'chrome 38', 'safari 9'],
       renderModernChunks: false,
     }),
     {
