@@ -815,10 +815,21 @@ input:focus, select:focus {
 
 .spectator-mode-active .score-cell {
   font-size: 7rem !important;
+  width: 35% !important;
+}
+
+.spectator-mode-active .legs-cell {
+  width: 30% !important;
+  gap: 1.5rem !important;
 }
 
 .spectator-mode-active .player-name {
   font-size: 1.8rem !important;
+  width: 35% !important;
+}
+
+.spectator-mode-active .player-name-spacer {
+  width: 30% !important;
 }
 
 .spectator-mode-active .leg-box {
