@@ -6,7 +6,7 @@
   "homepage": "https://KXORATH.github.io/dart4fun_competitions/",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node remove-crossorigin.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
