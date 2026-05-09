@@ -136,7 +136,7 @@ export function useTournamentState() {
   });
 }, []);
 
-  const initHost = useCallback((mode = '1v1') => {
+  const initHost = useCallback((mode = '1v1', resumingPhase) => {
     const code = 'DART-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     const peer = new Peer(code, {
       debug: 3,
@@ -152,8 +152,8 @@ export function useTournamentState() {
       setPeerId(id);
       setIsHost(true);
       isHostRef.current = true;
-      if (arguments[1] !== undefined) {
-         updateState(prev => ({ ...prev, phase: arguments[1] }));
+      if (resumingPhase !== undefined && resumingPhase !== null) {
+         updateState(prev => ({ ...prev, phase: resumingPhase }));
       } else {
          updateState(prev => ({ ...prev, phase: PHASES.SETUP_PLAYERS, settings: { ...prev.settings, mode } }));
       }

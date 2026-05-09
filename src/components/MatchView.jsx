@@ -69,6 +69,18 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   }, [match.liveState]);
 
   useEffect(() => {
+      // "Game On!" announcement
+      if (p1Legs === 0 && p2Legs === 0 && p1Visits === 0 && p2Visits === 0 && history.length === 0) {
+          if ('speechSynthesis' in window) {
+              const msg = new SpeechSynthesisUtterance("Game On!");
+              msg.lang = 'en-GB';
+              msg.rate = 1.05;
+              window.speechSynthesis.speak(msg);
+          }
+      }
+  }, []); // Run only once on mount
+
+  useEffect(() => {
     const snapshot = {
       p1Legs,
       p2Legs,
@@ -155,40 +167,49 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         wonLeg = true;
     }
 
+    const nextPlayerRemainingScore = currentPlayer === 1 ? p2Score : p1Score;
+
     if (isBust || wonLeg) {
         const potentialP1Legs = currentPlayer === 1 ? p1Legs + 1 : p1Legs;
         const potentialP2Legs = currentPlayer === 2 ? p2Legs + 1 : p2Legs;
         const isMatchFinishing = (potentialP1Legs >= legsToWin || potentialP2Legs >= legsToWin);
         
-        speakScore(scoreVal, isBust, wonLeg, newScore, isMatchFinishing);
+        speakScore(scoreVal, isBust, wonLeg, nextPlayerRemainingScore, isMatchFinishing);
         if (scoreVal >= 60 && !isBust) setScoreAnimation(scoreVal);
 
         setPendingDartPrompt({ type: wonLeg ? 'win' : 'bust', score: scoreVal, isBust });
         return;
     }
 
-    speakScore(scoreVal, false, false, newScore, false);
+    speakScore(scoreVal, false, false, nextPlayerRemainingScore, false);
     if (scoreVal >= 60) setScoreAnimation(scoreVal);
 
     processThrow(scoreVal, false, 3);
   };
 
-  const speakScore = (scoreVal, isBust, wonLeg, remainingScore, matchFinished) => {
+  const speakScore = (scoreVal, isBust, wonLeg, nextPlayerRemainingScore, matchFinished) => {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       
       let text = scoreVal.toString();
       if (isBust) text = "No score";
-      if (wonLeg && matchFinished) text = "Game shot, and the match!";
-      else if (wonLeg) text = "Game shot!";
+      
+      if (wonLeg) {
+          const winnerName = currentPlayer === 1 ? match.player1.name : match.player2.name;
+          if (matchFinished) {
+              text = `Game shot, and the match to ${winnerName}!`;
+          } else {
+              text = `Game shot, and the leg to ${winnerName}!`;
+          }
+      }
       
       const msg = new SpeechSynthesisUtterance(text);
       msg.lang = 'en-GB';
       msg.rate = 1.05;
       
       msg.onend = () => {
-          if (!isBust && !wonLeg && remainingScore <= 170 && remainingScore > 1) {
-               const reqMsg = new SpeechSynthesisUtterance(`You require ${remainingScore}`);
+          if (!wonLeg && nextPlayerRemainingScore <= 170 && nextPlayerRemainingScore > 1) {
+               const reqMsg = new SpeechSynthesisUtterance(`You require ${nextPlayerRemainingScore}`);
                reqMsg.lang = 'en-GB';
                window.speechSynthesis.speak(reqMsg);
           }
