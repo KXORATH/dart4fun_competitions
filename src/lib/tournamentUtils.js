@@ -115,8 +115,14 @@ export function calculateAdvancementOdds(groupPlayers, groupMatches, numSimulati
     });
     
     const getWinProb = (p1, p2) => {
-        const p1Score = (playerStats[p1.id] ? (playerStats[p1.id].legsWon / Math.max(1, playerStats[p1.id].matchesPlayed)) : 0) + 1;
-        const p2Score = (playerStats[p2.id] ? (playerStats[p2.id].legsWon / Math.max(1, playerStats[p2.id].matchesPlayed)) : 0) + 1;
+        let p1Skill = 50;
+        let p2Skill = 50;
+        
+        if (p1.isBot && p1.botAverage) p1Skill = p1.botAverage;
+        if (p2.isBot && p2.botAverage) p2Skill = p2.botAverage;
+
+        const p1Score = (playerStats[p1.id] ? (playerStats[p1.id].legsWon / Math.max(1, playerStats[p1.id].matchesPlayed)) : 0) * 10 + p1Skill;
+        const p2Score = (playerStats[p2.id] ? (playerStats[p2.id].legsWon / Math.max(1, playerStats[p2.id].matchesPlayed)) : 0) * 10 + p2Skill;
         return p1Score / (p1Score + p2Score);
     };
 

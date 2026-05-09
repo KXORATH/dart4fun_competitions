@@ -52,34 +52,45 @@ const processIncomingState = (prev, payload, isHost) => {
     }
 
     const mergedGroupMatches = { ...payload.groupMatches };
-    if (prev.activeMatch && prev.activeMatch.type === 'group') {
-        const gId = prev.activeMatch.groupId;
-        const mId = prev.activeMatch.matchId;
-        const myMatch = (prev.groupMatches[gId] && prev.groupMatches[gId].find(m => m.id === mId));
-        const theirMatch = (mergedGroupMatches[gId] && mergedGroupMatches[gId].find(m => m.id === mId));
-        if (myMatch && theirMatch && !theirMatch.isFinished) {
-            mergedGroupMatches[gId] = mergedGroupMatches[gId].map(m => m.id === mId ? myMatch : m);
-        }
-    }
+    Object.keys(prev.groupMatches).forEach(gId => {
+        if (!mergedGroupMatches[gId]) return;
+        mergedGroupMatches[gId] = mergedGroupMatches[gId].map(theirMatch => {
+            const myMatch = prev.groupMatches[gId].find(m => m.id === theirMatch.id);
+            if (!myMatch) return theirMatch;
+            
+            // 1. Nigdy nie cofaj zakończonego meczu
+            if (myMatch.isFinished && !theirMatch.isFinished) {
+                return myMatch;
+            }
+            // 2. Chroń aktualnie rozgrywany mecz, jeśli jeszcze nie jest skończony przez kogoś innego
+            if (prev.activeMatch && prev.activeMatch.type === 'group' && prev.activeMatch.matchId === theirMatch.id) {
+                if (!theirMatch.isFinished) return myMatch;
+            }
+            return theirMatch;
+        });
+    });
     
     const mergedKnockouts = [ ...payload.knockouts ];
-    if (prev.activeMatch && prev.activeMatch.type === 'knockout') {
-        const rId = prev.activeMatch.roundId;
-        const mId = prev.activeMatch.matchId;
-        const rIdx = prev.knockouts.findIndex(r => r.id === rId);
-        const myMatch = (prev.knockouts[rIdx] && prev.knockouts[rIdx].matches && prev.knockouts[rIdx].matches.find(m => m.id === mId));
+    mergedKnockouts.forEach((theirRound, rIdx) => {
+        const myRound = prev.knockouts.find(r => r.id === theirRound.id);
+        if (!myRound) return;
         
-        const theirRoundIdx = mergedKnockouts.findIndex(r => r.id === rId);
-        if (theirRoundIdx >= 0) {
-            const theirMatch = mergedKnockouts[theirRoundIdx].matches.find(m => m.id === mId);
-            if (myMatch && theirMatch && !theirMatch.isFinished) {
-                mergedKnockouts[theirRoundIdx] = {
-                   ...mergedKnockouts[theirRoundIdx],
-                   matches: mergedKnockouts[theirRoundIdx].matches.map(m => m.id === mId ? myMatch : m)
-                };
-            }
-        }
-    }
+        mergedKnockouts[rIdx] = {
+            ...theirRound,
+            matches: theirRound.matches.map(theirMatch => {
+                const myMatch = myRound.matches.find(m => m.id === theirMatch.id);
+                if (!myMatch) return theirMatch;
+
+                if (myMatch.isFinished && !theirMatch.isFinished) {
+                    return myMatch;
+                }
+                if (prev.activeMatch && prev.activeMatch.type === 'knockout' && prev.activeMatch.matchId === theirMatch.id) {
+                    if (!theirMatch.isFinished) return myMatch;
+                }
+                return theirMatch;
+            })
+        };
+    });
 
     return {
       ...payload,
