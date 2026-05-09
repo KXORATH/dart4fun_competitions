@@ -344,7 +344,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   }
 
   return (
-    <div className="animate-fade-in match-view-wrapper" style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className={`animate-fade-in match-view-wrapper ${isSpectator ? 'spectator-mode-active' : ''}`} style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div className="flex match-view-header" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <button className="secondary" onClick={onBack}>
           <ArrowLeft size={18} /> Back
@@ -495,15 +495,30 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                   </button>
                 </div>
             ) : (
-                <div className="numpad-grid quick-scores-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-                  {[26, 41, 45, 60, 81, 85, 100, 140].map(num => (
-                    <button key={num} className="secondary numpad-btn" onClick={() => handleQuickScore(num)}>
-                      {num}
-                    </button>
-                  ))}
-                  <button className="secondary numpad-btn" style={{ gridColumn: '1 / -1' }} onClick={handleUndo}>
-                      <Undo size={24} style={{ marginRight: '0.5rem' }} /> Undo
-                  </button>
+                <div className="numpad-grid extended-grid" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '0.75rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                        {[1,2,3,4,5,6,7,8,9].map(num => (
+                            <button key={num} className="secondary numpad-btn" onClick={() => handleInput(num.toString())}>
+                                {num}
+                            </button>
+                        ))}
+                        <button className="secondary numpad-btn" onClick={handleUndo}>
+                            <Undo size={20} />
+                        </button>
+                        <button className="secondary numpad-btn" onClick={() => handleInput('0')}>
+                            0
+                        </button>
+                        <button className="secondary numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
+                            <Delete size={24} strokeWidth={1.5} />
+                        </button>
+                    </div>
+                    <div className="quick-scores-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                        {[26, 41, 45, 60, 81, 85, 100, 140].map(num => (
+                            <button key={num} className="secondary numpad-btn quick-score-btn" onClick={() => handleQuickScore(num)}>
+                                {num}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
             
