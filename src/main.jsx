@@ -4,14 +4,20 @@ import './index.css';
 import App from './App.jsx';
 
 window.addEventListener('error', (e) => {
-  const d = document.createElement('div');
-  d.id = 'error-overlay';
-  d.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:red;color:white;z-index:99999;padding:2rem;overflow:auto;word-wrap:break-word;font-size:14px;font-family:monospace;';
-  
   const msg = e.message || 'Unknown Error';
   const file = e.filename || 'unknown';
   const line = e.lineno || '0';
   const stack = (e.error && e.error.stack) ? e.error.stack : 'No stack trace';
+
+  // Ignore generic cross-origin or injected script errors that TVs often throw
+  if (msg === 'Script error.' && (line === 0 || line === '0' || file === 'unknown' || file === '')) {
+    console.warn('Ignored generic script error:', e);
+    return;
+  }
+
+  const d = document.createElement('div');
+  d.id = 'error-overlay';
+  d.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:red;color:white;z-index:99999;padding:2rem;overflow:auto;word-wrap:break-word;font-size:14px;font-family:monospace;';
   
   d.innerHTML = `
     <h1 style="color:white;text-align:left;font-size:24px;margin-bottom:1rem;">WINDOW ERROR</h1>
@@ -19,7 +25,10 @@ window.addEventListener('error', (e) => {
     <p><strong>Message:</strong> ${msg}</p>
     <p><strong>Location:</strong> ${file}:${line}</p>
     <pre style="background:rgba(0,0,0,0.3);padding:1rem;margin-top:1rem;white-space:pre-wrap;font-size:12px;">${stack}</pre>
-    <button onclick="window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now()" style="margin-top:2rem;padding:1rem 2rem;background:white;color:red;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">HARD RELOAD APP</button>
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+      <button onclick="window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now()" style="padding:1rem 2rem;background:white;color:red;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">HARD RELOAD APP</button>
+      <button onclick="document.getElementById('error-overlay').remove()" style="padding:1rem 2rem;background:#550000;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">ZAMKNIJ BŁĄD (IGNORUJ)</button>
+    </div>
   `;
   document.body.appendChild(d);
 });

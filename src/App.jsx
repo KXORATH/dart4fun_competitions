@@ -19,8 +19,15 @@ function App() {
 
   // Auto-join from URL query parameter (e.g. ?join=DART-XYZW)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const joinCode = params.get('join');
+    let joinCode = null;
+    const search = window.location.search;
+    if (search) {
+      const match = search.match(/[?&]join=([^&]+)/);
+      if (match) {
+        joinCode = decodeURIComponent(match[1]);
+      }
+    }
+
     if (joinCode && phase === PHASES.LOBBY) {
       // Clean URL without reloading
       window.history.replaceState({}, '', window.location.pathname);
