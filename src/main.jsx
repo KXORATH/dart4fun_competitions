@@ -15,10 +15,11 @@ window.addEventListener('error', (e) => {
   
   d.innerHTML = `
     <h1 style="color:white;text-align:left;font-size:24px;margin-bottom:1rem;">APPLICATION ERROR</h1>
+    <p><strong>URL:</strong> ${window.location.href}</p>
     <p><strong>Message:</strong> ${msg}</p>
     <p><strong>Location:</strong> ${file}:${line}</p>
     <pre style="background:rgba(0,0,0,0.3);padding:1rem;margin-top:1rem;white-space:pre-wrap;font-size:12px;">${stack}</pre>
-    <button onclick="location.reload()" style="margin-top:2rem;padding:1rem 2rem;background:white;color:red;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">RELOAD APP</button>
+    <button onclick="window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now()" style="margin-top:2rem;padding:1rem 2rem;background:white;color:red;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">HARD RELOAD APP</button>
   `;
   document.body.appendChild(d);
 });
