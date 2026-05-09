@@ -578,7 +578,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                         </button>
                     </div>
                     <div className="quick-scores-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-                        {[26, 41, 45, 60, 81, 85, 100, 140].map(num => (
+                        {[22, 26, 29, 41, 45, 60, 81, 85].map(num => (
                             <button key={num} className="secondary numpad-btn quick-score-btn" onClick={() => handleQuickScore(num)}>
                                 {num}
                             </button>
