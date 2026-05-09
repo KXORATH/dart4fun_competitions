@@ -132,6 +132,9 @@ export function useTournamentState() {
 }, []);
 
   const initHost = useCallback((mode = '1v1', resumingPhase) => {
+    setIsHost(true);
+    isHostRef.current = true;
+    
     const code = 'DART-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     const peer = new Peer(code, {
       debug: 3,
@@ -145,8 +148,6 @@ export function useTournamentState() {
 
     peer.on('open', (id) => {
       setPeerId(id);
-      setIsHost(true);
-      isHostRef.current = true;
       if (resumingPhase !== undefined && resumingPhase !== null) {
          updateState(prev => ({ ...prev, phase: resumingPhase }));
       } else {
@@ -169,6 +170,13 @@ export function useTournamentState() {
         if (data.type === 'STATE_UPDATE') {
           setState(prev => {
             const newState = processIncomingState(prev, data.payload, true);
+            
+            try {
+              localStorage.setItem('dart4fun_state', JSON.stringify(newState));
+            } catch(e) {
+              console.error('Failed to save incoming state synchronously', e);
+            }
+
             connectionsRef.current
               .filter(c => c.peer !== conn.peer && c.open)
               .forEach(c => c.send({ type: 'STATE_UPDATE', payload: newState }));
