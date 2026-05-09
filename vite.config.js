@@ -10,6 +10,12 @@ export default defineConfig({
       targets: ['> 0.5%', 'last 2 versions', 'Firefox ESR', 'not dead', 'ie 11', 'chrome 49'],
       renderModernChunks: false,
     }),
+    {
+      name: 'remove-crossorigin',
+      transformIndexHtml(html) {
+        return html.replace(/crossorigin="[^"]*"/g, '').replace(/crossorigin/g, '');
+      }
+    }
   ],
   base: '/dart4fun_competitions/',
   build: {
