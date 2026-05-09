@@ -107,6 +107,16 @@ export function useTournamentState() {
     isHostRef.current = isHost;
   }, [isHost]);
 
+  useEffect(() => {
+    try {
+        if (isHost) {
+            localStorage.setItem('dart4fun_state', JSON.stringify(state));
+        }
+    } catch(e) {
+        console.error("Failed to save state", e);
+    }
+  }, [state, isHost]);
+
   // updateState is stable (no deps) — always reads fresh values from refs
   const updateState = useCallback((updater) => {
   setState(prev => {
@@ -125,12 +135,6 @@ export function useTournamentState() {
     } else {
       console.warn('[updateState] NICZEGO NIE WYSŁANO!');
     }
-
-    try {
-        if (isHostRef.current) {
-            localStorage.setItem('dart4fun_state', JSON.stringify(next));
-        }
-    } catch(e) {}
 
     return next;
   });
