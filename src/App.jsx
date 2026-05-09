@@ -12,10 +12,13 @@ import KnockoutBracket from './components/KnockoutBracket';
 import MatchView from './components/MatchView';
 import StatsView from './components/StatsView';
 import QRCodeDisplay from './components/QRCodeDisplay';
+import Screensaver from './components/Screensaver';
+import { Monitor } from 'lucide-react';
 
 function App() {
   const { state, updateState, peerId, isHost, initHost, joinHost, resumeState, connectionsCount } = useTournamentState();
   const { phase, players, groups, groupMatches, knockouts, winner, settings, globalHistory, activeMatch } = state;
+  const [isScreensaverActive, setIsScreensaverActive] = useState(false);
 
   // Auto-join from URL query parameter (e.g. ?join=DART-XYZW)
   useEffect(() => {
@@ -327,6 +330,12 @@ function App() {
           {(phase > PHASES.SETUP_GROUPS || ((settings && settings.mode === '1v1') && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
               <button className="secondary" onClick={() => setPhase(PHASES.STATS_VIEW)}>View Stats</button>
           )}
+
+          {(phase === PHASES.GROUP_STAGE || phase === PHASES.KNOCKOUT_STAGE || phase === PHASES.STATS_VIEW) && (
+              <button className="secondary" onClick={() => setIsScreensaverActive(true)} title="TV Idle Mode">
+                  <Monitor size={18} style={{ marginRight: '0.25rem' }} /> TV Idle Mode
+              </button>
+          )}
         </div>
       </header>
 
@@ -423,6 +432,17 @@ function App() {
           />
         )}
       </main>
+
+      {isScreensaverActive && (
+          <Screensaver 
+              groups={groups} 
+              groupMatches={groupMatches} 
+              knockouts={knockouts} 
+              phase={phase} 
+              settings={settings}
+              onClose={() => setIsScreensaverActive(false)} 
+          />
+      )}
     </>
   );
 }
