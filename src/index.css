@@ -807,47 +807,51 @@ input:focus, select:focus {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  transform: scale(1.6) !important;
-  margin: 0 !important;
+  transform: none !important;
+  margin: 0 auto !important;
   padding: 2rem !important;
-  max-width: 800px;
+  width: 90vw !important;
+  max-width: 1400px !important;
 }
 
 .spectator-mode-active .score-cell {
-  font-size: 7rem !important;
-  width: 35% !important;
+  font-size: clamp(6rem, 14vw, 15rem) !important;
+  width: 40% !important;
 }
 
 .spectator-mode-active .legs-cell {
-  width: 30% !important;
-  gap: 1.5rem !important;
+  width: 20% !important;
+  gap: 2rem !important;
 }
 
 .spectator-mode-active .player-name {
-  font-size: 1.8rem !important;
-  width: 35% !important;
+  font-size: clamp(1.8rem, 3vw, 3.5rem) !important;
+  width: 40% !important;
+  white-space: normal !important;
+  word-break: break-word !important;
 }
 
 .spectator-mode-active .player-name-spacer {
-  width: 30% !important;
+  width: 20% !important;
 }
 
 .spectator-mode-active .leg-box {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  font-size: 2.5rem !important;
+  font-size: clamp(2.5rem, 5vw, 5rem) !important;
 }
 
 .spectator-mode-active .leg-divider {
-  font-size: 2.5rem !important;
+  font-size: clamp(2.5rem, 5vw, 5rem) !important;
 }
 
 .spectator-mode-active .match-stats-row {
-  transform: scale(1.5) !important;
-  margin-top: 5rem !important;
-  width: 70% !important;
+  transform: none !important;
+  margin-top: 3rem !important;
+  width: 80vw !important;
+  max-width: 1200px !important;
+  font-size: clamp(1rem, 1.5vw, 1.8rem) !important;
   opacity: 0.8 !important;
-  max-width: 800px;
 }
 
 @media (max-width: 768px) {
