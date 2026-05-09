@@ -760,39 +760,99 @@ input:focus, select:focus {
   100% { transform: scaleX(1); }
 }
 
-/* Spectator Mode Styling */
+/* Spectator Mode (TV View) Styling */
 .spectator-mode-active {
-  justify-content: center;
-  align-items: center;
-  height: 80vh;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  background-color: #050505 !important;
+  background-image: radial-gradient(circle at 50% 50%, #151820 0%, #000 100%) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+}
+
+.spectator-mode-active .match-view-header {
+  position: absolute !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  width: auto !important;
+  margin: 0 !important;
+}
+
+.spectator-mode-active .match-view-header h2,
+.spectator-mode-active .match-view-header p,
+.spectator-mode-active .match-view-header button:not(.spectator-toggle-btn) {
+  display: none !important;
+}
+
+.spectator-mode-active .spectator-toggle-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  opacity: 0.3 !important;
+  transition: opacity 0.3s !important;
+}
+
+.spectator-mode-active .spectator-toggle-btn:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .spectator-mode-active .scoreboard-panel {
-  transform: scale(1.3);
-  transform-origin: top center;
-  margin-top: 2rem;
-  margin-bottom: 5rem;
-  width: 100%;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: scale(1.6) !important;
+  margin: 0 !important;
+  padding: 2rem !important;
+  max-width: 800px;
+}
+
+.spectator-mode-active .score-cell {
+  font-size: 7rem !important;
+}
+
+.spectator-mode-active .player-name {
+  font-size: 1.8rem !important;
+}
+
+.spectator-mode-active .leg-box {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-size: 2.5rem !important;
+}
+
+.spectator-mode-active .leg-divider {
+  font-size: 2.5rem !important;
 }
 
 .spectator-mode-active .match-stats-row {
-  transform: scale(1.3);
-  transform-origin: top center;
-  width: 100%;
+  transform: scale(1.5) !important;
+  margin-top: 5rem !important;
+  width: 70% !important;
+  opacity: 0.8 !important;
+  max-width: 800px;
 }
 
 @media (max-width: 768px) {
-  .spectator-mode-active {
-    height: 100dvh;
-    justify-content: flex-start;
-  }
   .spectator-mode-active .scoreboard-panel {
-    transform: scale(1.1);
-    margin-top: 3rem;
-    margin-bottom: 1.5rem;
+    transform: scale(1) !important;
+  }
+  .spectator-mode-active .score-cell {
+    font-size: 4.5rem !important;
+  }
+  .spectator-mode-active .player-name {
+    font-size: 1.3rem !important;
   }
   .spectator-mode-active .match-stats-row {
-    transform: scale(1.1);
+    transform: scale(1) !important;
+    margin-top: 2rem !important;
+    width: 90% !important;
   }
 }
 

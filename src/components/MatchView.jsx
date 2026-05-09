@@ -529,7 +529,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Best of {settings.bestOf}</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="secondary" style={{ padding: '0.5rem' }} onClick={() => setIsSpectator(!isSpectator)} title="Spectator View">
+            <button className="secondary spectator-toggle-btn" style={{ padding: '0.5rem' }} onClick={() => setIsSpectator(!isSpectator)} title="Spectator View">
                 {isSpectator ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
         </div>
