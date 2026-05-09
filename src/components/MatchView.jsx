@@ -134,23 +134,28 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       let dartsUsed = 3;
       
       const isCheckout = currentScore <= 50 || (currentScore <= 170 && [170,167,164,161,160].includes(currentScore)) || (currentScore <= 158 && currentScore !== 159);
+      let checkoutHit = false;
 
       if (isCheckout) {
-          const hitChance = botAverage / 150;
+          let hitChance = 0;
+          if (currentScore <= 40) {
+              hitChance = botAverage / 150;
+          } else if (currentScore <= 80) {
+              hitChance = botAverage / 250;
+          } else if (currentScore <= 120) {
+              hitChance = Math.max(0, (botAverage - 40) / 300);
+          } else {
+              hitChance = Math.max(0, (botAverage - 60) / 400);
+          }
+          
           if (Math.random() < hitChance) {
               scoreVal = currentScore;
               dartsUsed = Math.ceil(Math.random() * 3);
-          } else {
-              if (Math.random() < 0.3) {
-                  isBust = true;
-                  scoreVal = 0;
-              } else {
-                  scoreVal = Math.floor(Math.random() * (currentScore - 2)); 
-                  if (currentScore - scoreVal < 2) scoreVal = currentScore - 2;
-                  if (scoreVal < 0) scoreVal = 0;
-              }
+              checkoutHit = true;
           }
-      } else {
+      }
+
+      if (!checkoutHit) {
           const variance = 20;
           scoreVal = Math.floor(botAverage + (Math.random() * variance * 2 - variance));
           
@@ -162,11 +167,23 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           if (scoreVal > 180) scoreVal = 180;
           
           const remaining = currentScore - scoreVal;
-          if (remaining === 1 || remaining < 0) {
-              isBust = true;
-              scoreVal = 0;
-          } else if (remaining === 169 || remaining === 168 || remaining === 165 || remaining === 162 || remaining === 159) {
-              scoreVal -= 2;
+          
+          if (currentScore <= 50) {
+              if (Math.random() < 0.3 || remaining <= 1) {
+                  isBust = true;
+                  scoreVal = 0;
+              } else {
+                  let left = Math.floor(Math.random() * (currentScore / 2)) * 2;
+                  if (left < 2) left = 2;
+                  scoreVal = currentScore - left;
+              }
+          } else {
+              if (remaining === 1 || remaining < 0) {
+                  isBust = true;
+                  scoreVal = 0;
+              } else if (remaining === 169 || remaining === 168 || remaining === 165 || remaining === 162 || remaining === 159) {
+                  scoreVal -= 2;
+              }
           }
       }
 
@@ -279,7 +296,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       msg.rate = 1.05;
       
       msg.onend = () => {
-          if (!wonLeg && nextPlayerRemainingScore <= 170 && nextPlayerRemainingScore > 1) {
+          const nextPlayer = currentPlayer === 1 ? match.player2 : match.player1;
+          if (!nextPlayer.isBot && !wonLeg && nextPlayerRemainingScore <= 170 && nextPlayerRemainingScore > 1) {
                const reqMsg = new SpeechSynthesisUtterance(`You require ${nextPlayerRemainingScore}`);
                reqMsg.lang = 'en-GB';
                window.speechSynthesis.speak(reqMsg);
@@ -383,7 +401,10 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
   const startHoldSubmit = (e) => {
       if (e) { e.preventDefault(); }
-      if (inputValue === '') return;
+      if (inputValue === '') {
+          handleEnter(false);
+          return;
+      }
       setIsHoldingSubmit(true);
       holdTimeoutRef.current = setTimeout(() => {
           setIsHoldingSubmit(false);
