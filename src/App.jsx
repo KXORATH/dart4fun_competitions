@@ -435,11 +435,13 @@ function App() {
 
       {isScreensaverActive && (
           <Screensaver 
+              players={players}
               groups={groups} 
               groupMatches={groupMatches} 
               knockouts={knockouts} 
               phase={phase} 
               settings={settings}
+              globalHistory={getAllHistory()}
               onClose={() => setIsScreensaverActive(false)} 
           />
       )}
