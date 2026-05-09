@@ -131,56 +131,77 @@ function App() {
     updateState({ activeMatch: { type: 'knockout', roundId, matchId }, phase: PHASES.MATCH_VIEW });
   };
 
-  const handleMatchFinish = (p1Legs, p2Legs, matchHistory) => {
-      let newGroupsMatches = { ...groupMatches };
-      let newKnockouts = [...knockouts];
-      let newWinner = winner;
-      let returnPhase = PHASES.GROUP_STAGE;
-      
-      if (activeMatch.type === 'group') {
-          returnPhase = PHASES.GROUP_STAGE;
-          const gId = activeMatch.groupId;
-          const matchIndex = newGroupsMatches[gId].findIndex(m => m.id === activeMatch.matchId);
-          if (matchIndex >= 0) {
-              const m = newGroupsMatches[gId][matchIndex];
-              const { liveState, ...matchWithoutLiveState } = m;
-              newGroupsMatches[gId][matchIndex] = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
-          }
-      } else if (activeMatch.type === 'knockout') {
-          returnPhase = PHASES.KNOCKOUT_STAGE;
-          const { roundId, matchId } = activeMatch;
-          const rIndex = newKnockouts.findIndex(r => r.id === roundId);
-          const mIndex = newKnockouts[rIndex].matches.findIndex(m => m.id === matchId);
-          
-          const { liveState, ...matchWithoutLiveState } = newKnockouts[rIndex].matches[mIndex];
-          let m = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
-          m.winner = m.p1Legs > m.p2Legs ? m.player1 : m.player2;
-          newKnockouts[rIndex].matches[mIndex] = m;
-          
-          if (rIndex + 1 < newKnockouts.length) {
-              const nextRoundMatch = { ...newKnockouts[rIndex + 1] };
-              const nextMatches = [...nextRoundMatch.matches];
-              const nextMatchIndex = Math.floor(mIndex / 2);
-              const nextPlayerPos = mIndex % 2 === 0 ? 'player1' : 'player2';
-              nextMatches[nextMatchIndex] = { ...nextMatches[nextMatchIndex], [nextPlayerPos]: m.winner };
-              nextRoundMatch.matches = nextMatches;
-              newKnockouts[rIndex + 1] = nextRoundMatch;
-          } else {
-              newWinner = m.winner;
-          }
-      } else if (activeMatch.type === 'single') {
-          returnPhase = PHASES.STATS_VIEW;
-      }
+  const handleMatchFinish = useCallback((p1Legs, p2Legs, matchHistory) => {
+      updateState(prev => {
+          const { activeMatch, groupMatches, knockouts, winner, globalHistory } = prev;
+          if (!activeMatch) return prev;
 
-      updateState({
-          groupMatches: newGroupsMatches,
-          knockouts: newKnockouts,
-          winner: newWinner,
-          globalHistory: [...globalHistory, ...matchHistory],
-          activeMatch: null,
-          phase: returnPhase
+          let newGroupsMatches = groupMatches;
+          let newKnockouts = knockouts;
+          let newWinner = winner;
+          let returnPhase = PHASES.GROUP_STAGE;
+
+          if (activeMatch.type === 'group') {
+              returnPhase = PHASES.GROUP_STAGE;
+              const gId = activeMatch.groupId;
+              const groupArr = groupMatches[gId] || [];
+              const matchIndex = groupArr.findIndex(m => m.id === activeMatch.matchId);
+              if (matchIndex >= 0) {
+                  const { liveState, ...matchWithoutLiveState } = groupArr[matchIndex];
+                  const updatedMatch = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
+                  newGroupsMatches = {
+                      ...groupMatches,
+                      [gId]: groupArr.map((m, i) => i === matchIndex ? updatedMatch : m)
+                  };
+              }
+          } else if (activeMatch.type === 'knockout') {
+              returnPhase = PHASES.KNOCKOUT_STAGE;
+              const { roundId, matchId } = activeMatch;
+              const rIndex = knockouts.findIndex(r => r.id === roundId);
+              if (rIndex >= 0) {
+                  const mIndex = knockouts[rIndex].matches.findIndex(m => m.id === matchId);
+                  if (mIndex >= 0) {
+                      const { liveState, ...matchWithoutLiveState } = knockouts[rIndex].matches[mIndex];
+                      let finishedMatch = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
+                      finishedMatch.winner = finishedMatch.p1Legs > finishedMatch.p2Legs ? finishedMatch.player1 : finishedMatch.player2;
+
+                      newKnockouts = knockouts.map((round, ri) => {
+                          if (ri === rIndex) {
+                              return { ...round, matches: round.matches.map((m, mi) => mi === mIndex ? finishedMatch : m) };
+                          }
+                          if (ri === rIndex + 1) {
+                              const nextMatchIndex = Math.floor(mIndex / 2);
+                              const nextPlayerPos = mIndex % 2 === 0 ? 'player1' : 'player2';
+                              return {
+                                  ...round,
+                                  matches: round.matches.map((m, mi) =>
+                                      mi === nextMatchIndex ? { ...m, [nextPlayerPos]: finishedMatch.winner } : m
+                                  )
+                              };
+                          }
+                          return round;
+                      });
+
+                      if (rIndex + 1 >= knockouts.length) {
+                          newWinner = finishedMatch.winner;
+                      }
+                  }
+              }
+          } else if (activeMatch.type === 'single') {
+              returnPhase = PHASES.STATS_VIEW;
+          }
+
+          return {
+              ...prev,
+              groupMatches: newGroupsMatches,
+              knockouts: newKnockouts,
+              winner: newWinner,
+              globalHistory: [...globalHistory, ...matchHistory],
+              activeMatch: null,
+              phase: returnPhase
+          };
       });
-  };
+  }, [updateState]);
 
   const getAllHistory = useCallback(() => {
       let allH = [...globalHistory];

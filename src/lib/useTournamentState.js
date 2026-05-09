@@ -107,33 +107,24 @@ export function useTournamentState() {
     isHostRef.current = isHost;
   }, [isHost]);
 
-  useEffect(() => {
-    try {
-        if (isHost) {
-            localStorage.setItem('dart4fun_state', JSON.stringify(state));
-        }
-    } catch(e) {
-        console.error("Failed to save state", e);
-    }
-  }, [state, isHost]);
 
   // updateState is stable (no deps) — always reads fresh values from refs
   const updateState = useCallback((updater) => {
   setState(prev => {
     const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
 
-    // TYMCZASOWE LOGI - usuń po naprawieniu
-    console.log('[updateState] isHost:', isHostRef.current, '| connections:', connectionsRef.current.length, '| hostConn open:', (hostConnRef.current && hostConnRef.current.open));
-
+    // Save synchronously inside updater so a page refresh can't race past it
     if (isHostRef.current) {
+      try {
+        localStorage.setItem('dart4fun_state', JSON.stringify(next));
+      } catch(e) {
+        console.error('Failed to save state synchronously', e);
+      }
       connectionsRef.current.forEach(conn => {
         if (conn.open) conn.send({ type: 'STATE_UPDATE', payload: next });
       });
     } else if (hostConnRef.current && hostConnRef.current.open) {
-      console.log('[updateState] Sending to host...');
       hostConnRef.current.send({ type: 'STATE_UPDATE', payload: next });
-    } else {
-      console.warn('[updateState] NICZEGO NIE WYSŁANO!');
     }
 
     return next;
