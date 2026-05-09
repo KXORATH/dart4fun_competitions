@@ -38,6 +38,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const [scoreAnimation, setScoreAnimation] = useState(null);
   
   const holdTimeoutRef = useRef(null);
+  const holdStartTimeoutRef = useRef(null);
   const [isHoldingSubmit, setIsHoldingSubmit] = useState(false);
   
   const legsToWin = Math.ceil(settings.bestOf / 2);
@@ -405,7 +406,11 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           handleEnter(false);
           return;
       }
-      setIsHoldingSubmit(true);
+      
+      holdStartTimeoutRef.current = setTimeout(() => {
+          setIsHoldingSubmit(true);
+      }, 200);
+
       holdTimeoutRef.current = setTimeout(() => {
           setIsHoldingSubmit(false);
           handleEnter(true);
@@ -415,13 +420,21 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
   const endHoldSubmit = (e) => {
       if (e) { e.preventDefault(); }
+      
+      if (holdStartTimeoutRef.current) {
+          clearTimeout(holdStartTimeoutRef.current);
+          holdStartTimeoutRef.current = null;
+      }
+
       if (holdTimeoutRef.current) {
           clearTimeout(holdTimeoutRef.current);
           holdTimeoutRef.current = null;
           if (isHoldingSubmit) {
               setIsHoldingSubmit(false);
-              handleEnter(false);
           }
+          handleEnter(false);
+      } else if (isHoldingSubmit) {
+          setIsHoldingSubmit(false);
       }
   };
 
@@ -485,6 +498,20 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <button className="primary" onClick={() => { setBullseyeWinner(1); setCurrentPlayer(1); }}>{match.player1.name}</button>
                   <button className="primary" onClick={() => { setBullseyeWinner(2); setCurrentPlayer(2); }}>{match.player2.name}</button>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0.5rem 0' }}>
+                      <div style={{ height: '1px', background: 'var(--panel-border)', flex: 1 }}></div>
+                      <span style={{ padding: '0 1rem', color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase' }}>or</span>
+                      <div style={{ height: '1px', background: 'var(--panel-border)', flex: 1 }}></div>
+                  </div>
+                  
+                  <button className="secondary" onClick={() => { 
+                      const winner = Math.random() < 0.5 ? 1 : 2;
+                      setBullseyeWinner(winner); 
+                      setCurrentPlayer(winner); 
+                  }}>
+                      Randomize (Coin Toss)
+                  </button>
               </div>
           </div>
         </div>
@@ -671,7 +698,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                     </div>
                     <div className="quick-scores-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
                         {[22, 26, 29, 41, 45, 60, 81, 85].map(num => (
-                            <button key={num} className="secondary numpad-btn quick-score-btn" onClick={() => handleQuickScore(num)}>
+                            <button key={num} className="secondary numpad-btn quick-score-btn" onClick={(e) => { handleQuickScore(num); e.target.blur(); }}>
                                 {num}
                             </button>
                         ))}

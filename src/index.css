@@ -752,7 +752,7 @@ input:focus, select:focus {
   background: rgba(255, 255, 255, 0.2);
   transform-origin: left;
   transform: scaleX(0);
-  animation: progressBar 0.8s linear forwards 0.2s;
+  animation: progressBar 0.8s linear forwards;
 }
 
 @keyframes progressBar {
