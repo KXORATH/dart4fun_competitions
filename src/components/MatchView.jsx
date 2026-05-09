@@ -20,6 +20,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const [inputValue, setInputValue] = useState((match.liveState && match.liveState.inputValue !== undefined) ? match.liveState.inputValue : '');
   
   const [history, setHistory] = useState((match.liveState && match.liveState.history) || []);
+  const historyRef = useRef((match.liveState && match.liveState.history) || []);
   const [legHistory, setLegHistory] = useState((match.liveState && match.liveState.legHistory) || []);
   
   const [p1Visits, setP1Visits] = useState((match.liveState && match.liveState.p1Visits !== undefined) ? match.liveState.p1Visits : 0);
@@ -326,6 +327,9 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
     setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits, p1Darts, p2Darts }]);
 
+    // Snapshot current darts before updating them
+    const currentPlayerDartsBeforeThrow = currentPlayer === 1 ? p1Darts : p2Darts;
+
     if (currentPlayer === 1) {
         setP1Visits(v => v + 1);
         setP1Darts(d => d + dartsThrown);
@@ -335,9 +339,13 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     }
 
     const matchNameText = match.name || (match.player1 && match.player2 ? `${match.player1.name} vs ${match.player2.name}` : 'Match');
+    // Capture current leg numbers synchronously before any state updates
     const currentLegNum = p1Legs + p2Legs + 1;
+    const currentP1Legs = p1Legs;
+    const currentP2Legs = p2Legs;
 
-    setHistory(prev => [...prev, {
+    // Build new history entries synchronously so we have the full list before calling onMatchFinish
+    const throwEntry = {
       playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
       score: isBust ? 0 : scoreVal,
       isBust,
@@ -347,20 +355,31 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       matchId: match.id,
       matchName: matchNameText,
       legNumber: currentLegNum
-    }]);
+    };
 
     if (wonLeg) {
-        setHistory(prev => [...prev, {
+        const legWinEntry = {
             playerId: currentPlayer === 1 ? match.player1.id : match.player2.id,
             type: 'LEG_WIN',
-            numDarts: (currentPlayer === 1 ? p1Darts : p2Darts) + dartsThrown,
+            numDarts: currentPlayerDartsBeforeThrow + dartsThrown,
             checkout: scoreVal,
             matchId: match.id,
             matchName: matchNameText,
             legNumber: currentLegNum
-        }]);
-        handleLegWin(currentPlayer);
+        };
+        // One atomic setHistory call so historyRef is up-to-date when confirmMatchFinish runs
+        setHistory(prev => {
+            const updated = [...prev, throwEntry, legWinEntry];
+            historyRef.current = updated;
+            return updated;
+        });
+        handleLegWin(currentPlayer, currentP1Legs, currentP2Legs);
     } else {
+        setHistory(prev => {
+            const updated = [...prev, throwEntry];
+            historyRef.current = updated;
+            return updated;
+        });
         if (!isBust) {
             if (currentPlayer === 1) setP1Score(newScore); else setP2Score(newScore);
         }
@@ -371,9 +390,10 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     setPendingDartPrompt(null);
   };
 
-  const handleLegWin = (winnerNum) => {
-      const newP1Legs = winnerNum === 1 ? p1Legs + 1 : p1Legs;
-      const newP2Legs = winnerNum === 2 ? p2Legs + 1 : p2Legs;
+  // Accepts current leg counts as parameters to avoid reading stale closure state
+  const handleLegWin = (winnerNum, currentP1Legs, currentP2Legs) => {
+      const newP1Legs = winnerNum === 1 ? currentP1Legs + 1 : currentP1Legs;
+      const newP2Legs = winnerNum === 2 ? currentP2Legs + 1 : currentP2Legs;
       
       setP1Legs(newP1Legs);
       setP2Legs(newP2Legs);
@@ -395,7 +415,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
   const confirmMatchFinish = () => {
       if (matchFinishedState) {
-          onMatchFinish(matchFinishedState.p1Legs, matchFinishedState.p2Legs, history);
+          // Use historyRef to guarantee we pass the latest history, not a stale closure
+          onMatchFinish(matchFinishedState.p1Legs, matchFinishedState.p2Legs, historyRef.current);
       }
   };
 

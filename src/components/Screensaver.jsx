@@ -155,9 +155,9 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
 
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
                         <Trophy size={48} color="#f59e0b" style={{ margin: '0 auto 1rem auto' }} />
-                        <h3 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 180s</h3>
-                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#f59e0b', marginBottom: '0.5rem' }}>{globalStats.most180s.count || '0'}</div>
-                        <div style={{ fontSize: '1.2rem', color: '#f59e0b' }}>{globalStats.most180s.player || 'None yet'}</div>
+                        <h3 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 60+</h3>
+                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#f59e0b', marginBottom: '0.5rem' }}>{globalStats.most60plus.count || '0'}</div>
+                        <div style={{ fontSize: '1.2rem', color: '#f59e0b' }}>{globalStats.most60plus.player || 'None yet'}</div>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
