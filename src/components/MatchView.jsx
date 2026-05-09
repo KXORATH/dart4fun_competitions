@@ -43,6 +43,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const [isHoldingSubmit, setIsHoldingSubmit] = useState(false);
   
   const previousHistoryLengthRef = useRef(history ? history.length : 0);
+  const recentLocalSnapshotsRef = useRef(new Set());
   
   useEffect(() => {
     if (history && history.length > previousHistoryLengthRef.current) {
@@ -61,7 +62,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     if (!match.liveState) return;
     
     const remoteStr = JSON.stringify(match.liveState);
-    if (remoteStr === lastLocalSnapshotRef.current || remoteStr === lastRemoteSnapshotRef.current) {
+    if (recentLocalSnapshotsRef.current.has(remoteStr) || remoteStr === lastRemoteSnapshotRef.current) {
         return; // We already processed this or it came from us
     }
     lastRemoteSnapshotRef.current = remoteStr;
@@ -125,6 +126,13 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
     console.log('[MatchView] wywołuję onLiveUpdate, p1Score:', p1Score, 'p2Score:', p2Score);
     lastLocalSnapshotRef.current = serializedSnapshot;
+    
+    recentLocalSnapshotsRef.current.add(serializedSnapshot);
+    if (recentLocalSnapshotsRef.current.size > 20) {
+        const arr = Array.from(recentLocalSnapshotsRef.current);
+        recentLocalSnapshotsRef.current.delete(arr[0]);
+    }
+    
     onLiveUpdate(snapshot);
   }, [p1Legs, p2Legs, p1Score, p2Score, currentPlayer, inputValue, history, legHistory, p1Visits, p2Visits, p1Darts, p2Darts, pendingDartPrompt, bullseyeWinner, onLiveUpdate]);
   
@@ -323,7 +331,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     let newScore = currentScore - scoreVal;
     if (isBust) newScore = currentScore;
     
-    const wonLeg = (!isBust && newScore === 0);
+    const wonLeg = (!isBust && Number(newScore) === 0);
 
     setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits, p1Darts, p2Darts }]);
 
@@ -392,17 +400,18 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
   // Accepts current leg counts as parameters to avoid reading stale closure state
   const handleLegWin = (winnerNum, currentP1Legs, currentP2Legs) => {
-      const newP1Legs = winnerNum === 1 ? currentP1Legs + 1 : currentP1Legs;
-      const newP2Legs = winnerNum === 2 ? currentP2Legs + 1 : currentP2Legs;
+      const newP1Legs = winnerNum === 1 ? Number(currentP1Legs) + 1 : Number(currentP1Legs);
+      const newP2Legs = winnerNum === 2 ? Number(currentP2Legs) + 1 : Number(currentP2Legs);
+      const targetLegs = Math.ceil(Number(settings.bestOf || 3) / 2);
       
       setP1Legs(newP1Legs);
       setP2Legs(newP2Legs);
       
-      if (newP1Legs >= legsToWin || newP2Legs >= legsToWin) {
+      if (newP1Legs >= targetLegs || newP2Legs >= targetLegs) {
           setMatchFinishedState({ p1Legs: newP1Legs, p2Legs: newP2Legs });
       } else {
-          setP1Score(settings.startingScore);
-          setP2Score(settings.startingScore);
+          setP1Score(Number(settings.startingScore) || 501);
+          setP2Score(Number(settings.startingScore) || 501);
           setP1Visits(0);
           setP2Visits(0);
           setP1Darts(0);
