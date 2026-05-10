@@ -2,7 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, Delete, Undo, Eye, EyeOff, Keyboard } from 'lucide-react';
 
 export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate, onBack }) {
-  console.log('[MatchView] render, match.id:', (match && match.id), 'onLiveUpdate type:', typeof onLiveUpdate);
+  window.DEBUG_MATCH = window.DEBUG_MATCH || [];
+  const logDebug = (...args) => {
+      const msg = args.join(' ');
+      console.log('[DEBUG_MATCH]', msg);
+      window.DEBUG_MATCH.push(msg);
+  };
+
+  logDebug('render, match.id:', (match && match.id), 'pendingDartPrompt:', JSON.stringify(match?.liveState?.pendingDartPrompt));
 
   const [p1Legs, setP1Legs] = useState((match.liveState && match.liveState.p1Legs !== undefined && match.liveState.p1Legs !== null) ? match.liveState.p1Legs : (match.p1Legs !== undefined && match.p1Legs !== null ? match.p1Legs : 0));
   const [p2Legs, setP2Legs] = useState((match.liveState && match.liveState.p2Legs !== undefined && match.liveState.p2Legs !== null) ? match.liveState.p2Legs : (match.p2Legs !== undefined && match.p2Legs !== null ? match.p2Legs : 0));
@@ -79,6 +86,9 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     setP2Visits(match.liveState.p2Visits);
     setP1Darts(match.liveState.p1Darts !== undefined ? match.liveState.p1Darts : 0);
     setP2Darts(match.liveState.p2Darts !== undefined ? match.liveState.p2Darts : 0);
+    
+    logDebug('liveState effect: Setting pendingDartPrompt to', JSON.stringify(match.liveState.pendingDartPrompt));
+    
     setPendingDartPrompt(match.liveState.pendingDartPrompt !== undefined ? match.liveState.pendingDartPrompt : null);
     setBullseyeWinner(match.liveState.bullseyeWinner !== undefined ? match.liveState.bullseyeWinner : null);
   }, [match.liveState]);
@@ -259,6 +269,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     let isBust = false;
     let wonLeg = false;
 
+    logDebug('handleEnter called. valToUse:', valToUse, 'currentScore:', currentScore, 'scoreVal:', scoreVal, 'newScore:', newScore);
+
     if (valToUse === '') {
         if (currentScore > 180) {
             isBust = false;
@@ -279,15 +291,20 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     const nextPlayerRemainingScore = currentPlayer === 1 ? p2Score : p1Score;
 
     if (isBust || wonLeg) {
+        logDebug('handleEnter: isBust or wonLeg is TRUE! isBust:', isBust, 'wonLeg:', wonLeg);
         const potentialP1Legs = currentPlayer === 1 ? p1Legs + 1 : p1Legs;
         const potentialP2Legs = currentPlayer === 2 ? p2Legs + 1 : p2Legs;
         const isMatchFinishing = (potentialP1Legs >= legsToWin || potentialP2Legs >= legsToWin);
         
         speakScore(scoreVal, isBust, wonLeg, nextPlayerRemainingScore, isMatchFinishing);
 
+        logDebug('handleEnter: calling setPendingDartPrompt with', JSON.stringify({ type: wonLeg ? 'win' : 'bust', score: scoreVal, isBust }));
         setPendingDartPrompt({ type: wonLeg ? 'win' : 'bust', score: scoreVal, isBust });
+        logDebug('handleEnter: setPendingDartPrompt called. Returning.');
         return;
     }
+
+    logDebug('handleEnter: normal throw. Calling processThrow with 3 darts.');
 
     speakScore(scoreVal, false, false, nextPlayerRemainingScore, false);
 
@@ -327,16 +344,19 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   };
 
   const processThrow = (scoreVal, isBust, dartsThrown) => {
-    const currentScore = currentPlayer === 1 ? p1Score : p2Score;
-    let newScore = currentScore - scoreVal;
-    if (isBust) newScore = currentScore;
-    
-    const wonLeg = (!isBust && Number(newScore) === 0);
+    try {
+        logDebug('processThrow called with scoreVal:', scoreVal, 'isBust:', isBust, 'dartsThrown:', dartsThrown);
+        const currentScore = currentPlayer === 1 ? p1Score : p2Score;
+        let newScore = currentScore - scoreVal;
+        if (isBust) newScore = currentScore;
+        
+        const wonLeg = (!isBust && Number(newScore) === 0);
+        logDebug('processThrow: wonLeg evaluates to:', wonLeg);
 
-    setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits, p1Darts, p2Darts }]);
+        setLegHistory(prev => [...prev, { p1Score, p2Score, currentPlayer, p1Visits, p2Visits, p1Darts, p2Darts }]);
 
-    // Snapshot current darts before updating them
-    const currentPlayerDartsBeforeThrow = currentPlayer === 1 ? p1Darts : p2Darts;
+        // Snapshot current darts before updating them
+        const currentPlayerDartsBeforeThrow = currentPlayer === 1 ? p1Darts : p2Darts;
 
     if (currentPlayer === 1) {
         setP1Visits(v => v + 1);
@@ -396,20 +416,31 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
     
     setInputValue('');
     setPendingDartPrompt(null);
+    } catch (e) {
+        console.error('Error in processThrow:', e);
+        alert('Error processing throw: ' + e.message);
+        setPendingDartPrompt(null);
+    }
   };
 
   // Accepts current leg counts as parameters to avoid reading stale closure state
   const handleLegWin = (winnerNum, currentP1Legs, currentP2Legs) => {
-      const newP1Legs = winnerNum === 1 ? Number(currentP1Legs) + 1 : Number(currentP1Legs);
-      const newP2Legs = winnerNum === 2 ? Number(currentP2Legs) + 1 : Number(currentP2Legs);
-      const targetLegs = Math.ceil(Number(settings.bestOf || 3) / 2);
-      
-      setP1Legs(newP1Legs);
-      setP2Legs(newP2Legs);
+      try {
+          logDebug('handleLegWin called with winnerNum:', winnerNum, 'currentP1Legs:', currentP1Legs, 'currentP2Legs:', currentP2Legs);
+          const newP1Legs = winnerNum === 1 ? Number(currentP1Legs) + 1 : Number(currentP1Legs);
+          const newP2Legs = winnerNum === 2 ? Number(currentP2Legs) + 1 : Number(currentP2Legs);
+          const targetLegs = Math.ceil(Number(settings.bestOf || 3) / 2);
+          
+          logDebug('handleLegWin: newP1Legs:', newP1Legs, 'newP2Legs:', newP2Legs, 'targetLegs:', targetLegs);
+          
+          setP1Legs(newP1Legs);
+          setP2Legs(newP2Legs);
       
       if (newP1Legs >= targetLegs || newP2Legs >= targetLegs) {
+          logDebug('handleLegWin: match finished! Calling setMatchFinishedState');
           setMatchFinishedState({ p1Legs: newP1Legs, p2Legs: newP2Legs });
       } else {
+          logDebug('handleLegWin: match NOT finished. Resetting scores to 501');
           setP1Score(Number(settings.startingScore) || 501);
           setP2Score(Number(settings.startingScore) || 501);
           setP1Visits(0);
@@ -419,6 +450,11 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           setLegHistory([]);
           const totalLegsPlayed = newP1Legs + newP2Legs;
           setCurrentPlayer((totalLegsPlayed % 2) === 0 ? bullseyeWinner : (bullseyeWinner === 1 ? 2 : 1));
+      }
+      logDebug('handleLegWin: finished');
+      } catch (e) {
+          console.error('Error in handleLegWin:', e);
+          alert('Error handling leg win: ' + e.message);
       }
   };
 
