@@ -43,7 +43,8 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
         const group = groups[groupIndex];
         const matches = groupMatches[group.id];
         const standings = calculateGroupStandings(group.players, matches);
-        const odds = calculateAdvancementOdds(group.players, matches);
+        const allMatches = [...Object.values(groupMatches || {}).flat(), ...(knockouts || []).flatMap(r => r.matches)];
+        const odds = calculateAdvancementOdds(group.players, matches, 1000, globalHistory, allMatches);
 
         return (
             <div className="glass-panel" style={{ width: '90%', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s' }} key={`group-${group.id}`}>

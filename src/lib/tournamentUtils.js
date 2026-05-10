@@ -83,7 +83,96 @@ export function calculateGroupStandings(groupPlayers, groupMatches) {
   });
 }
 
-export function calculateAdvancementOdds(groupPlayers, groupMatches, numSimulations = 1000) {
+export function getMatchupProbability(p1, p2, globalHistory = [], allMatches = []) {
+    if (p1.isBot && p2.isBot) {
+        const p1Score = p1.botAverage || 50;
+        const p2Score = p2.botAverage || 50;
+        return p1Score / (p1Score + p2Score);
+    }
+    
+    // Default 50% if no history at all
+    if (!globalHistory || globalHistory.length === 0) {
+        const p1Score = p1.isBot ? (p1.botAverage || 50) : 50;
+        const p2Score = p2.isBot ? (p2.botAverage || 50) : 50;
+        if (p1Score === p2Score) return 0.5;
+        return p1Score / (p1Score + p2Score);
+    }
+
+    const getStats = (playerId) => {
+        let totalScore = 0;
+        let totalDarts = 0;
+        let highestCheckout = 0;
+        let legsWon = 0;
+        
+        globalHistory.forEach(h => {
+            if (h.playerId !== playerId) return;
+            if (h.type === 'LEG_WIN') {
+                legsWon++;
+                if (h.checkout > highestCheckout) highestCheckout = h.checkout;
+            } else {
+                if (!h.isBust) totalScore += (h.score || 0);
+                totalDarts += (h.dartsThrown || 3);
+            }
+        });
+        
+        const average = totalDarts > 0 ? (totalScore / totalDarts) * 3 : 0;
+        return { average, highestCheckout, legsWon };
+    };
+
+    const s1 = getStats(p1.id);
+    const s2 = getStats(p2.id);
+
+    // If neither has played enough darts, return fallback
+    if (s1.average === 0 && s2.average === 0 && s1.legsWon === 0 && s2.legsWon === 0) {
+        const p1Score = p1.isBot ? (p1.botAverage || 50) : 50;
+        const p2Score = p2.isBot ? (p2.botAverage || 50) : 50;
+        if (p1Score === p2Score) return 0.5;
+        return p1Score / (p1Score + p2Score);
+    }
+
+    // 1. Average (Base 50%)
+    const p1AvgScore = p1.isBot ? (p1.botAverage || 50) : (s1.average > 0 ? s1.average : 40);
+    const p2AvgScore = p2.isBot ? (p2.botAverage || 50) : (s2.average > 0 ? s2.average : 40);
+    
+    // 2. Checkout (Finishing 20%)
+    const p1CheckScore = p1.isBot ? p1AvgScore : (s1.highestCheckout > 0 ? Math.min(100, s1.highestCheckout) : p1AvgScore * 0.8);
+    const p2CheckScore = p2.isBot ? p2AvgScore : (s2.highestCheckout > 0 ? Math.min(100, s2.highestCheckout) : p2AvgScore * 0.8);
+
+    // 3. Head to Head (30%)
+    let p1H2hWins = 0;
+    let p2H2hWins = 0;
+    
+    if (allMatches && allMatches.length > 0) {
+        allMatches.forEach(m => {
+            if (m && m.isFinished && m.p1Legs !== null && m.p2Legs !== null && m.player1 && m.player2) {
+                if (m.player1.id === p1.id && m.player2.id === p2.id) {
+                    p1H2hWins += m.p1Legs;
+                    p2H2hWins += m.p2Legs;
+                } else if (m.player1.id === p2.id && m.player2.id === p1.id) {
+                    p2H2hWins += m.p1Legs;
+                    p1H2hWins += m.p2Legs;
+                }
+            }
+        });
+    }
+
+    let p1H2hScore = p1AvgScore;
+    let p2H2hScore = p2AvgScore;
+    if (p1H2hWins > p2H2hWins) {
+        p1H2hScore = p1AvgScore * 1.5;
+    } else if (p2H2hWins > p1H2hWins) {
+        p2H2hScore = p2AvgScore * 1.5;
+    }
+
+    // Exponent to make difference more pronounced
+    const power1 = Math.pow((p1AvgScore * 0.5) + (p1CheckScore * 0.2) + (p1H2hScore * 0.3), 1.5);
+    const power2 = Math.pow((p2AvgScore * 0.5) + (p2CheckScore * 0.2) + (p2H2hScore * 0.3), 1.5);
+
+    if (power1 + power2 === 0) return 0.5;
+    return power1 / (power1 + power2);
+}
+
+export function calculateAdvancementOdds(groupPlayers, groupMatches, numSimulations = 1000, globalHistory = [], allMatches = []) {
     if (!groupMatches || groupMatches.length === 0) return {};
     
     const played = groupMatches.filter(m => m.isFinished && m.p1Legs !== null && m.p2Legs !== null);
@@ -98,32 +187,8 @@ export function calculateAdvancementOdds(groupPlayers, groupMatches, numSimulati
         return result;
     }
     
-    const playerStats = {};
-    groupPlayers.forEach(p => {
-        playerStats[p.id] = { legsWon: 0, matchesPlayed: 0 };
-    });
-    
-    played.forEach(m => {
-        if (playerStats[m.player1.id]) {
-            playerStats[m.player1.id].legsWon += m.p1Legs;
-            playerStats[m.player1.id].matchesPlayed++;
-        }
-        if (playerStats[m.player2.id]) {
-            playerStats[m.player2.id].legsWon += m.p2Legs;
-            playerStats[m.player2.id].matchesPlayed++;
-        }
-    });
-    
     const getWinProb = (p1, p2) => {
-        let p1Skill = 50;
-        let p2Skill = 50;
-        
-        if (p1.isBot && p1.botAverage) p1Skill = p1.botAverage;
-        if (p2.isBot && p2.botAverage) p2Skill = p2.botAverage;
-
-        const p1Score = (playerStats[p1.id] ? (playerStats[p1.id].legsWon / Math.max(1, playerStats[p1.id].matchesPlayed)) : 0) * 10 + p1Skill;
-        const p2Score = (playerStats[p2.id] ? (playerStats[p2.id].legsWon / Math.max(1, playerStats[p2.id].matchesPlayed)) : 0) * 10 + p2Skill;
-        return p1Score / (p1Score + p2Score);
+        return getMatchupProbability(p1, p2, globalHistory, allMatches);
     };
 
     let advancementCounts = {};

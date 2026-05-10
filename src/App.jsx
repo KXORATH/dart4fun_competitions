@@ -395,6 +395,8 @@ function App() {
             groupMatches={groupMatches}
             isHost={isHost}
             settings={settings}
+            globalHistory={state.globalHistory || []}
+            knockouts={knockouts}
             onPlayMatch={handlePlayGroupMatch}
             onProceedToKnockout={startKnockouts}
             onBack={() => setPhase(PHASES.SETUP_GROUPS)}

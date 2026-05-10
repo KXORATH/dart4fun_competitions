@@ -1,8 +1,9 @@
 import React from 'react';
-import { calculateGroupStandings } from '../lib/tournamentUtils';
+import { calculateGroupStandings, getMatchupProbability } from '../lib/tournamentUtils';
 import { Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function GroupMatches({ groups, groupMatches, isHost, settings, onPlayMatch, onProceedToKnockout, onBack }) {
+export default function GroupMatches({ groups, groupMatches, isHost, settings, globalHistory = [], knockouts = [], onPlayMatch, onProceedToKnockout, onBack }) {
+  const allMatches = [...Object.values(groupMatches || {}).flat(), ...(knockouts || []).flatMap(r => r.matches)];
   
   // handleScoreChange removed since we use MatchView now
 
@@ -89,7 +90,7 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, o
                         {m.player1.name}
                       </div>
                       
-                      <div className="group-match-center">
+                      <div className="group-match-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {m.isFinished ? (
                           <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent-color)' }}>
                             {m.p1Legs} - {m.p2Legs}
@@ -99,9 +100,14 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, o
                             Continue
                           </button>
                         ) : (
-                          <button onClick={() => onPlayMatch(group.id, m.id)} className="group-match-btn">
-                            Play Match
-                          </button>
+                          <>
+                            <button onClick={() => onPlayMatch(group.id, m.id)} className="group-match-btn">
+                              Play Match
+                            </button>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                              [ {Math.round(getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) * 100)}% - {Math.round((1 - getMatchupProbability(m.player1, m.player2, globalHistory, allMatches)) * 100)}% ]
+                            </div>
+                          </>
                         )}
                       </div>
 
