@@ -47,6 +47,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   
   const holdTimeoutRef = useRef(null);
   const holdStartTimeoutRef = useRef(null);
+  const longPressFiredRef = useRef(false);
   const [isHoldingSubmit, setIsHoldingSubmit] = useState(false);
   
   const previousHistoryLengthRef = useRef(history ? history.length : 0);
@@ -476,9 +477,8 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   };
 
   const startHoldSubmit = (e) => {
-      if (e) { e.preventDefault(); }
+      longPressFiredRef.current = false;
       if (inputValue === '') {
-          handleEnter(false);
           return;
       }
       
@@ -488,14 +488,13 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
 
       holdTimeoutRef.current = setTimeout(() => {
           setIsHoldingSubmit(false);
+          longPressFiredRef.current = true;
           handleEnter(true);
           holdTimeoutRef.current = null;
       }, 1000);
   };
 
   const endHoldSubmit = (e) => {
-      if (e) { e.preventDefault(); }
-      
       if (holdStartTimeoutRef.current) {
           clearTimeout(holdStartTimeoutRef.current);
           holdStartTimeoutRef.current = null;
@@ -504,13 +503,20 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       if (holdTimeoutRef.current) {
           clearTimeout(holdTimeoutRef.current);
           holdTimeoutRef.current = null;
-          if (isHoldingSubmit) {
-              setIsHoldingSubmit(false);
-          }
-          handleEnter(false);
-      } else if (isHoldingSubmit) {
+      }
+      
+      if (isHoldingSubmit) {
           setIsHoldingSubmit(false);
       }
+  };
+
+  const handleSubmitClick = (e) => {
+      if (e) { e.preventDefault(); }
+      if (longPressFiredRef.current) {
+          longPressFiredRef.current = false;
+          return;
+      }
+      handleEnter(false);
   };
 
   const handleUndo = () => {
@@ -789,6 +795,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                 onMouseLeave={endHoldSubmit}
                 onTouchStart={startHoldSubmit}
                 onTouchEnd={endHoldSubmit}
+                onClick={handleSubmitClick}
             >
               <span style={{ position: 'relative', zIndex: 2, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {isHoldingSubmit ? 'Sending Remaining...' : (inputValue === '' ? ((currentPlayer === 1 ? p1Score : p2Score) > 180 ? 'Submit 0' : 'Bust') : 'Submit Score')} <Check size={24} style={{ marginLeft: '0.5rem' }} />
