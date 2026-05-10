@@ -248,6 +248,116 @@ input:focus, select:focus {
   background: rgba(0, 0, 0, 0.2);
   padding: 0.5rem;
   border-radius: 8px;
+}
+
+.card-hover-effect {
+  /* Hover effects moved from inline JSX */
+}
+.card-hover-effect[onClick]:hover {
+  border-color: var(--accent-color) !important;
+  transform: translateY(-5px) !important;
+  box-shadow: 0 10px 25px rgba(245, 184, 0, 0.15) !important;
+}
+
+/* QR Code Display Styles */
+.qr-header-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: none !important; /* Remove weird glow */
+}
+
+.qr-header-badge:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.qr-small-wrapper {
+  background: white;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+}
+
+.qr-code-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.qr-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.qr-code-value {
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s;
+}
+
+.qr-overlay-content {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  padding: 3rem;
+  border-radius: 24px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.qr-large-wrapper {
+  background: white;
+  padding: 1rem;
+  border-radius: 16px;
+  margin: 2rem 0;
+  display: inline-block;
+  box-shadow: none !important; /* Remove weird glow */
+}
+
+.qr-overlay-code {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+}
+
+.qr-close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
   border: 1px solid var(--panel-border);
   overflow: hidden;
 }

@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Target, Cpu, MonitorPlay, Smartphone, LogIn, PlaySquare } from 'lucide-react';
 
+const Card = ({ icon: Icon, title, desc, onClick, children }) => (
+  <div 
+    className="glass-panel card-hover-effect" 
+    onClick={onClick}
+    style={{ 
+      padding: '2rem', 
+      cursor: onClick ? 'pointer' : 'default',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      textAlign: 'center',
+      height: '100%',
+      position: 'relative',
+      border: '1px solid var(--panel-border)',
+      transition: 'all 0.2s ease'
+    }}
+  >
+    <Icon size={48} color="var(--accent-color)" style={{ marginBottom: '1rem' }} />
+    <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{title}</h3>
+    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: children ? '1.5rem' : 0, flex: 1 }}>{desc}</p>
+    {children}
+  </div>
+);
+
 export default function Lobby({ onHost, onJoin, onResume }) {
   const [joinCode, setJoinCode] = useState('');
   const [hasSavedState, setHasSavedState] = useState(false);
@@ -16,44 +40,6 @@ export default function Lobby({ onHost, onJoin, onResume }) {
           }
       } catch(e) {}
   }, []);
-
-  const Card = ({ icon: Icon, title, desc, onClick, children }) => (
-    <div 
-      className="glass-panel" 
-      onClick={onClick}
-      style={{ 
-        padding: '2rem', 
-        cursor: onClick ? 'pointer' : 'default',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        height: '100%',
-        position: 'relative',
-        border: '1px solid var(--panel-border)',
-        transition: 'all 0.2s ease'
-      }}
-      onMouseEnter={(e) => {
-        if(onClick) {
-          e.currentTarget.style.borderColor = 'var(--accent-color)';
-          e.currentTarget.style.transform = 'translateY(-5px)';
-          e.currentTarget.style.boxShadow = '0 10px 25px rgba(245, 184, 0, 0.15)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if(onClick) {
-          e.currentTarget.style.borderColor = 'var(--panel-border)';
-          e.currentTarget.style.transform = 'none';
-          e.currentTarget.style.boxShadow = 'none';
-        }
-      }}
-    >
-      <Icon size={48} color="var(--accent-color)" style={{ marginBottom: '1rem' }} />
-      <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{title}</h3>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: children ? '1.5rem' : 0, flex: 1 }}>{desc}</p>
-      {children}
-    </div>
-  );
 
   return (
     <div className="animate-slide-up" style={{ maxWidth: '1000px', margin: '0 auto' }}>
