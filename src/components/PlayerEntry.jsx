@@ -2,10 +2,25 @@ import React, { useState } from 'react';
 import { UserPlus, UserMinus, ArrowRight, ArrowLeft } from 'lucide-react';
 import { generateId } from '../lib/idUtils';
 
-export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
+export default function PlayerEntry({ players, setPlayers, settings, onNext, onBack }) {
   const [newPlayerName, setNewPlayerName] = useState('');
   const [draggedItemIndex, setDraggedItemIndex] = useState(null);
   const [botAverage, setBotAverage] = useState(40);
+  const [hasInitializedBot, setHasInitializedBot] = useState(false);
+
+  React.useEffect(() => {
+    if (settings && settings.mode === '1v1_bot' && players.length === 2 && !players[1].isBot && !hasInitializedBot) {
+      setHasInitializedBot(true);
+      const newPlayers = [...players];
+      newPlayers[1] = { 
+        id: generateId(), 
+        name: `DartBot (avg: 40)`, 
+        isBot: true, 
+        botAverage: 40 
+      };
+      setPlayers(newPlayers);
+    }
+  }, [settings, players, setPlayers, hasInitializedBot]);
 
   const handleAddPlayer = (e) => {
     e.preventDefault();
@@ -107,7 +122,7 @@ export default function PlayerEntry({ players, setPlayers, onNext, onBack }) {
                 onDrop={(e) => handleDrop(e, index)}
                 className="flex items-center justify-between" 
                 style={{ 
-                  background: draggedItemIndex === index ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.05)', 
+                  background: draggedItemIndex === index ? 'var(--accent-soft)' : 'rgba(255, 255, 255, 0.05)', 
                   padding: '0.75rem 1rem', 
                   borderRadius: '8px',
                   border: draggedItemIndex === index ? '1px dashed var(--accent-color)' : '1px solid var(--panel-border)',

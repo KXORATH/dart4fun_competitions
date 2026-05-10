@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { calculateGroupStandings, getMatchupProbability } from '../lib/tournamentUtils';
 import { Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
+import KnockoutBracket from './KnockoutBracket';
 
-export default function GroupMatches({ groups, groupMatches, isHost, settings, globalHistory = [], knockouts = [], onPlayMatch, onProceedToKnockout, onBack }) {
+export default function GroupMatches({ groups, groupMatches, isHost, settings, globalHistory = [], knockouts = [], winner, onPlayGroupMatch, onPlayKnockoutMatch, onRematch, onBack }) {
+  const [viewMode, setViewMode] = useState('groups');
+
   const allMatches = [...Object.values(groupMatches || {}).flat(), ...(knockouts || []).flatMap(r => r.matches)];
   
   // handleScoreChange removed since we use MatchView now
@@ -11,7 +14,29 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, g
     return Object.values(groupMatches).flat().every(m => m.isFinished);
   };
 
+  useEffect(() => {
+    if (isAllMatchesFinished()) {
+        setViewMode('knockouts');
+    }
+  }, [groupMatches]);
+
   const isMultiGuest = (settings && settings.mode === 'multi_judge') && !isHost;
+
+  if (viewMode === 'knockouts' && knockouts && knockouts.length > 0) {
+    return (
+      <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <KnockoutBracket
+          matches={knockouts}
+          isHost={isHost}
+          settings={settings}
+          onPlayMatch={onPlayKnockoutMatch}
+          winner={winner}
+          onRematch={onRematch}
+          onBack={() => setViewMode('groups')}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -25,16 +50,13 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, g
         </div>
         <h2 style={{ margin: 0 }}>Group Stage</h2>
         <div className="group-stage-header-right">
-          {!isMultiGuest && (
-            <button 
-              onClick={onProceedToKnockout} 
-              disabled={!isAllMatchesFinished()}
-              className="proceed-knockout-btn"
-              style={{ background: isAllMatchesFinished() ? 'var(--success-color)' : 'var(--accent-color)' }}
-            >
-              Proceed to Knockouts <ArrowRight size={18} />
-            </button>
-          )}
+          <button 
+            onClick={() => setViewMode('knockouts')} 
+            className="proceed-knockout-btn"
+            style={{ background: 'var(--accent-color)', color: '#1a1300' }}
+          >
+            Go to Knockouts <ArrowRight size={18} />
+          </button>
         </div>
       </div>
 
@@ -66,7 +88,7 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, g
                     {standings.map((p, i) => (
                       <tr key={p.id} style={{ 
                         borderBottom: '1px solid rgba(255,255,255,0.05)',
-                        backgroundColor: i < 2 ? 'rgba(16, 185, 129, 0.1)' : 'transparent' // Highlight top 2
+                        backgroundColor: i < 2 ? 'rgba(74, 139, 255, 0.1)' : 'transparent' // Highlight top 2
                       }}>
                         <td style={{ padding: '0.5rem' }}>{i + 1}</td>
                         <td style={{ padding: '0.5rem', fontWeight: 'bold' }}>{p.name}</td>
@@ -96,12 +118,12 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, g
                             {m.p1Legs} - {m.p2Legs}
                           </div>
                         ) : m.liveState ? (
-                          <button onClick={() => onPlayMatch(group.id, m.id)} className="group-match-btn" style={{ background: 'var(--warning-color)', color: '#000' }}>
+                          <button onClick={() => onPlayGroupMatch(group.id, m.id)} className="group-match-btn" style={{ background: 'var(--blue-color)', color: '#fff' }}>
                             Continue
                           </button>
                         ) : (
                           <>
-                            <button onClick={() => onPlayMatch(group.id, m.id)} className="group-match-btn">
+                            <button onClick={() => onPlayGroupMatch(group.id, m.id)} className="group-match-btn">
                               Play Match
                             </button>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>

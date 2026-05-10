@@ -146,6 +146,13 @@ export function useTournamentState() {
     setIsHost(true);
     isHostRef.current = true;
     
+    // Change phase immediately for snappy UI
+    if (resumingPhase !== undefined && resumingPhase !== null) {
+       updateState(prev => ({ ...prev, phase: resumingPhase }));
+    } else {
+       updateState(prev => ({ ...prev, phase: PHASES.SETUP_PLAYERS, settings: { ...prev.settings, mode } }));
+    }
+
     const code = 'DART-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     const peer = new Peer(code, {
       debug: 3,
@@ -157,13 +164,12 @@ export function useTournamentState() {
       }
     });
 
+    peer.on('error', (err) => {
+      console.error("PeerJS Host Error:", err);
+    });
+
     peer.on('open', (id) => {
       setPeerId(id);
-      if (resumingPhase !== undefined && resumingPhase !== null) {
-         updateState(prev => ({ ...prev, phase: resumingPhase }));
-      } else {
-         updateState(prev => ({ ...prev, phase: PHASES.SETUP_PLAYERS, settings: { ...prev.settings, mode } }));
-      }
     });
 
     peer.on('connection', (conn) => {

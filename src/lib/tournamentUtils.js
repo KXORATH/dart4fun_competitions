@@ -83,6 +83,68 @@ export function calculateGroupStandings(groupPlayers, groupMatches) {
   });
 }
 
+export function getGuaranteedPlacements(groupPlayers, groupMatches) {
+    const unplayed = groupMatches.filter(m => !m.isFinished || m.p1Legs === null || m.p2Legs === null);
+    const played = groupMatches.filter(m => m.isFinished && m.p1Legs !== null && m.p2Legs !== null);
+    
+    if (unplayed.length === 0) {
+        const standings = calculateGroupStandings(groupPlayers, played);
+        return { 1: standings[0], 2: standings[1] };
+    }
+    
+    const stats = {};
+    groupPlayers.forEach(p => stats[p.id] = { points: 0, possiblePoints: 0, p });
+    
+    played.forEach(m => {
+        if (m.p1Legs > m.p2Legs) { stats[m.player1.id].points += 3; }
+        else if (m.p1Legs < m.p2Legs) { stats[m.player2.id].points += 3; }
+        else { stats[m.player1.id].points += 1; stats[m.player2.id].points += 1; }
+    });
+    
+    unplayed.forEach(m => {
+        stats[m.player1.id].possiblePoints += 3;
+        stats[m.player2.id].possiblePoints += 3;
+    });
+
+    groupPlayers.forEach(p => {
+        stats[p.id].maxPoints = stats[p.id].points + stats[p.id].possiblePoints;
+    });
+    
+    let guaranteedFirst = null;
+    let guaranteedSecond = null;
+
+    for (const p of groupPlayers) {
+        let isFirst = true;
+        for (const other of groupPlayers) {
+            if (p.id !== other.id && stats[p.id].points <= stats[other.id].maxPoints) {
+                isFirst = false;
+                break;
+            }
+        }
+        if (isFirst) {
+            guaranteedFirst = p;
+        }
+    }
+    
+    if (guaranteedFirst) {
+        for (const p of groupPlayers) {
+            if (p.id === guaranteedFirst.id) continue;
+            let isSecond = true;
+            for (const other of groupPlayers) {
+                if (p.id !== other.id && other.id !== guaranteedFirst.id && stats[p.id].points <= stats[other.id].maxPoints) {
+                    isSecond = false;
+                    break;
+                }
+            }
+            if (isSecond) {
+                guaranteedSecond = p;
+            }
+        }
+    }
+
+    return { 1: guaranteedFirst, 2: guaranteedSecond };
+}
+
 export function getMatchupProbability(p1, p2, globalHistory = [], allMatches = []) {
     if (p1.isBot && p2.isBot) {
         const p1Score = p1.botAverage || 50;

@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { generateId } from './lib/idUtils';
-import { calculateGroupStandings } from './lib/tournamentUtils';
+import { calculateGroupStandings, getGuaranteedPlacements } from './lib/tournamentUtils';
 import { useTournamentState, PHASES } from './lib/useTournamentState';
 
 import Lobby from './components/Lobby';
@@ -41,7 +41,14 @@ function App() {
   const setPhase = (newPhase) => updateState({ phase: newPhase });
 
   const handleGroupsCreated = (newGroups, initialMatches) => {
-    updateState({ groups: newGroups, groupMatches: initialMatches, phase: PHASES.GROUP_STAGE });
+    const advancingPlaceholders = [];
+    for(let i = 0; i < newGroups.length; i++) {
+        advancingPlaceholders.push({ isPlaceholder: true, name: `${newGroups[i].name}-1st`, groupId: newGroups[i].id, rank: 1 });
+        const nextGroupIndex = (i + 1) % newGroups.length;
+        advancingPlaceholders.push({ isPlaceholder: true, name: `${newGroups[nextGroupIndex].name}-2nd`, groupId: newGroups[nextGroupIndex].id, rank: 2 });
+    }
+    const initialKnockouts = generateKnockoutMatches(advancingPlaceholders);
+    updateState({ groups: newGroups, groupMatches: initialMatches, knockouts: initialKnockouts, phase: PHASES.GROUP_STAGE });
   };
 
   const generateKnockoutMatches = (advancingPlayers) => {
@@ -88,8 +95,17 @@ function App() {
       roundIndex++;
       numMatches = numMatches / 2;
       const nextMatches = [];
+      const prevRoundName = rounds[roundIndex-1].name;
+      let prefix = 'R-';
+      if (prevRoundName === 'Semi Finals') prefix = 'S';
+      else if (prevRoundName === 'Quarter Finals') prefix = 'Q';
+      else if (prevRoundName === 'Round of 16') prefix = '1/8-';
+      else if (prevRoundName === 'Round of 32') prefix = '1/16-';
+      
       for(let i=0; i<numMatches; i++) {
-        nextMatches.push({ id: generateId(), player1: null, player2: null, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
+        const p1Placeholder = { isPlaceholder: true, name: `${prefix}${i*2 + 1} Winner` };
+        const p2Placeholder = { isPlaceholder: true, name: `${prefix}${i*2 + 2} Winner` };
+        nextMatches.push({ id: generateId(), player1: p1Placeholder, player2: p2Placeholder, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
       }
       let nName = 'Round of ' + (numMatches * 2);
       if (numMatches === 4) nName = 'Quarter Finals';
@@ -109,25 +125,7 @@ function App() {
     return rounds;
   };
 
-  const startKnockouts = () => {
-    const firstPlaces = [];
-    const secondPlaces = [];
-
-    groups.forEach(g => {
-      const standings = calculateGroupStandings(g.players, groupMatches[g.id]);
-      if (standings[0]) firstPlaces.push(standings[0]);
-      if (standings[1]) secondPlaces.push(standings[1]);
-    });
-
-    const advancing = [];
-    for(let i = 0; i < firstPlaces.length; i++) {
-        advancing.push(firstPlaces[i]);
-        advancing.push(secondPlaces[(i + 1) % secondPlaces.length] || secondPlaces[i]);
-    }
-
-    const initialKnockouts = generateKnockoutMatches(advancing);
-    updateState({ knockouts: initialKnockouts, phase: PHASES.KNOCKOUT_STAGE });
-  };
+  // startKnockouts removed because knockouts are created immediately with placeholders
 
   const handleRematch = () => {
     updateState({ groups: [], groupMatches: {}, knockouts: [], winner: null, globalHistory: [], phase: PHASES.SETUP_GROUPS });
@@ -159,13 +157,63 @@ function App() {
               if (matchIndex >= 0) {
                   const { liveState, ...matchWithoutLiveState } = groupArr[matchIndex];
                   const updatedMatch = { ...matchWithoutLiveState, p1Legs, p2Legs, isFinished: true };
+                  const newGroupArr = groupArr.map((m, i) => i === matchIndex ? updatedMatch : m);
                   newGroupsMatches = {
                       ...groupMatches,
-                      [gId]: groupArr.map((m, i) => i === matchIndex ? updatedMatch : m)
+                      [gId]: newGroupArr
                   };
+
+                  let firstPlace = null;
+                  let secondPlace = null;
+
+                  if (newGroupArr.every(m => m.isFinished)) {
+                      const group = prev.groups.find(g => g.id === gId);
+                      const standings = calculateGroupStandings(group.players, newGroupArr);
+                      firstPlace = standings[0];
+                      secondPlace = standings[1] || standings[0];
+                  } else {
+                      const group = prev.groups.find(g => g.id === gId);
+                      const guaranteed = getGuaranteedPlacements(group.players, newGroupArr);
+                      firstPlace = guaranteed[1];
+                      secondPlace = guaranteed[2];
+                  }
+
+                  if (firstPlace || secondPlace) {
+                      const replacePlayer = (p) => {
+                          if (!p || !p.isPlaceholder) return p;
+                          if (p.groupId === gId && p.rank === 1 && firstPlace) return firstPlace;
+                          if (p.groupId === gId && p.rank === 2 && secondPlace) return secondPlace;
+                          return p;
+                      };
+
+                      newKnockouts = newKnockouts.map(round => ({
+                          ...round,
+                          matches: round.matches.map(m => {
+                              const p1 = replacePlayer(m.player1);
+                              const p2 = replacePlayer(m.player2);
+                              let mWinner = m.winner;
+                              if (m.isBye) mWinner = p1;
+                              return { ...m, player1: p1, player2: p2, winner: mWinner };
+                          })
+                      }));
+
+                      for (let ri = 0; ri < newKnockouts.length - 1; ri++) {
+                          const currentRound = newKnockouts[ri];
+                          const nextRound = newKnockouts[ri+1];
+                          currentRound.matches.forEach((m, mIndex) => {
+                              if (m.isFinished || m.isBye) {
+                                  const nextMatchIndex = Math.floor(mIndex / 2);
+                                  const nextPlayerPos = mIndex % 2 === 0 ? 'player1' : 'player2';
+                                  if (m.winner) {
+                                      nextRound.matches[nextMatchIndex][nextPlayerPos] = m.winner;
+                                  }
+                              }
+                          });
+                      }
+                  }
               }
           } else if (activeMatch.type === 'knockout') {
-              returnPhase = PHASES.KNOCKOUT_STAGE;
+              returnPhase = PHASES.GROUP_STAGE;
               const { roundId, matchId } = activeMatch;
               const rIndex = knockouts.findIndex(r => r.id === roundId);
               if (rIndex >= 0) {
@@ -318,8 +366,11 @@ function App() {
     <>
       <header className={phase === PHASES.MATCH_VIEW ? "mobile-hidden-header" : ""} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ margin: 0 }}>Dart4fun Competitions</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Live Sync Engine</p>
+          <div style={{ margin: 0, fontSize: '2rem', fontWeight: 800, display: 'flex', alignItems: 'center', letterSpacing: '-0.02em' }}>
+            <span style={{ color: 'var(--blue-color)' }}>Dart</span>
+            <span style={{ color: 'var(--accent-color)' }}>4</span>
+            <span style={{ color: 'var(--danger-color)' }}>fun</span>
+          </div>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -327,11 +378,11 @@ function App() {
               <QRCodeDisplay peerId={peerId} isHost={isHost} />
           )}
 
-          {(phase > PHASES.SETUP_GROUPS || ((settings && settings.mode === '1v1') && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
+          {(phase > PHASES.SETUP_GROUPS || ((settings && (settings.mode === '1v1' || settings.mode === '1v1_bot')) && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
               <button className="secondary" onClick={() => setPhase(PHASES.STATS_VIEW)}>View Stats</button>
           )}
 
-          {(phase === PHASES.GROUP_STAGE || phase === PHASES.KNOCKOUT_STAGE || phase === PHASES.STATS_VIEW) && (
+          {(phase >= PHASES.GROUP_STAGE || ((settings && (settings.mode === '1v1' || settings.mode === '1v1_bot')) && phase >= PHASES.MATCH_VIEW)) && phase !== PHASES.STATS_VIEW && (
               <button className="secondary" onClick={() => setIsScreensaverActive(true)} title="TV Idle Mode">
                   <Monitor size={18} style={{ marginRight: '0.25rem' }} /> TV Idle Mode
               </button>
@@ -348,6 +399,7 @@ function App() {
           <PlayerEntry 
             players={players} 
             setPlayers={(p) => updateState({ players: p })} 
+            settings={settings}
             onNext={() => setPhase(PHASES.SETUP_SETTINGS)} 
             onBack={() => setPhase(PHASES.LOBBY)}
           />
@@ -358,7 +410,7 @@ function App() {
             settings={settings}
             setSettings={(s) => updateState({ settings: s })}
             onNext={() => {
-                if (settings.mode === '1v1') {
+                if (settings.mode === '1v1' || settings.mode === '1v1_bot') {
                     updateState({ 
                         activeMatch: {
                            id: generateId(),
@@ -397,21 +449,11 @@ function App() {
             settings={settings}
             globalHistory={state.globalHistory || []}
             knockouts={knockouts}
-            onPlayMatch={handlePlayGroupMatch}
-            onProceedToKnockout={startKnockouts}
-            onBack={() => setPhase(PHASES.SETUP_GROUPS)}
-          />
-        )}
-
-        {phase === PHASES.KNOCKOUT_STAGE && (
-          <KnockoutBracket
-            matches={knockouts}
-            isHost={isHost}
-            settings={settings}
-            onPlayMatch={handlePlayKnockoutMatch}
             winner={winner}
+            onPlayGroupMatch={handlePlayGroupMatch}
+            onPlayKnockoutMatch={handlePlayKnockoutMatch}
             onRematch={handleRematch}
-            onBack={() => setPhase(PHASES.GROUP_STAGE)}
+            onBack={() => setPhase(PHASES.SETUP_GROUPS)}
           />
         )}
 
@@ -430,7 +472,7 @@ function App() {
             players={players}
             globalHistory={getAllHistory()}
             settings={settings}
-            onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : ((settings && settings.mode === '1v1') ? PHASES.SETUP_SETTINGS : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE)))}
+            onBack={() => setPhase(activeMatch ? PHASES.MATCH_VIEW : ((settings && (settings.mode === '1v1' || settings.mode === '1v1_bot')) ? PHASES.SETUP_SETTINGS : (knockouts.length > 0 ? PHASES.KNOCKOUT_STAGE : PHASES.GROUP_STAGE)))}
           />
         )}
       </main>

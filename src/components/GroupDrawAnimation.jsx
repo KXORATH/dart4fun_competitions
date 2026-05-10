@@ -7,23 +7,23 @@ const DartboardSVG = ({ animate }) => (
     className={`dartboard-wrapper ${animate ? 'board-hit' : ''}`} 
     style={{ width: '280px', height: '280px', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.5))', zIndex: 1, position: 'relative' }}
   >
-    <circle cx="50" cy="50" r="48" fill="#0f1117" />
+    <circle cx="50" cy="50" r="48" fill="#0a0a0b" />
     
     {/* Base sectors using alternating colors - approximated by a backplate and segments */}
-    <circle cx="50" cy="50" r="38" fill="#fbbf24" stroke="#0f1117" strokeWidth="0.5" />
-    <circle cx="50" cy="50" r="38" fill="none" stroke="#1e293b" strokeWidth="76" strokeDasharray="11.9 11.9" opacity="0.9" />
+    <circle cx="50" cy="50" r="38" fill="#f5b800" stroke="#0a0a0b" strokeWidth="0.5" />
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#26262e" strokeWidth="76" strokeDasharray="11.9 11.9" opacity="0.9" />
 
     {/* Outer ring - Doubles */}
-    <circle cx="50" cy="50" r="36" fill="none" stroke="#ef4444" strokeWidth="4" strokeDasharray="11.3 11.3" />
-    <circle cx="50" cy="50" r="36" fill="none" stroke="#10b981" strokeWidth="4" strokeDasharray="0 11.3 11.3 0" />
+    <circle cx="50" cy="50" r="36" fill="none" stroke="#ff5350" strokeWidth="4" strokeDasharray="11.3 11.3" />
+    <circle cx="50" cy="50" r="36" fill="none" stroke="#4a8bff" strokeWidth="4" strokeDasharray="0 11.3 11.3 0" />
     
     {/* Inner ring - Trebles */}
-    <circle cx="50" cy="50" r="20" fill="none" stroke="#ef4444" strokeWidth="4" strokeDasharray="6.28 6.28" />
-    <circle cx="50" cy="50" r="20" fill="none" stroke="#10b981" strokeWidth="4" strokeDasharray="0 6.28 6.28 0" />
+    <circle cx="50" cy="50" r="20" fill="none" stroke="#ff5350" strokeWidth="4" strokeDasharray="6.28 6.28" />
+    <circle cx="50" cy="50" r="20" fill="none" stroke="#4a8bff" strokeWidth="4" strokeDasharray="0 6.28 6.28 0" />
     
     {/* Bullseyes */}
-    <circle cx="50" cy="50" r="8" fill="#10b981" stroke="#0f1117" strokeWidth="1" />
-    <circle cx="50" cy="50" r="4" fill="#ef4444" />
+    <circle cx="50" cy="50" r="8" fill="#4a8bff" stroke="#0a0a0b" strokeWidth="1" />
+    <circle cx="50" cy="50" r="4" fill="#ff5350" />
     
     {/* Wireframe */}
     {Array.from({length: 10}).map((_, i) => {
@@ -76,13 +76,13 @@ const DartSVG = ({ phase }) => {
         </defs>
         <g filter="url(#dart-shadow)">
             {/* Flight */}
-            <path d="M 5 5 L 35 15 L 40 40 L 15 35 Z" fill="#6366f1" />
-            <path d="M 5 5 L 15 35 L 40 40 L 35 15 Z" fill="#4f46e5" />
+            <path d="M 5 5 L 35 15 L 40 40 L 15 35 Z" fill="#4a8bff" />
+            <path d="M 5 5 L 15 35 L 40 40 L 35 15 Z" fill="#4a8bff" />
             {/* Shaft */}
-            <path d="M 25 25 L 60 60" stroke="#cbd5e1" strokeWidth="6" strokeLinecap="round" />
+            <path d="M 25 25 L 60 60" stroke="#a4a6ad" strokeWidth="6" strokeLinecap="round" />
             {/* Barrel */}
-            <path d="M 50 50 L 70 70" stroke="#fbbf24" strokeWidth="10" strokeLinecap="round" />
-            <path d="M 54 54 L 66 66" stroke="#f59e0b" strokeWidth="10" strokeDasharray="2 2" strokeLinecap="round" />
+            <path d="M 50 50 L 70 70" stroke="#f5b800" strokeWidth="10" strokeLinecap="round" />
+            <path d="M 54 54 L 66 66" stroke="#f5b800" strokeWidth="10" strokeDasharray="2 2" strokeLinecap="round" />
             {/* Point */}
             <path d="M 68 68 L 90 90 L 71 71 Z" fill="#9ca3af" stroke="#64748b" strokeWidth="2" strokeLinejoin="round" />
         </g>
@@ -182,7 +182,7 @@ export default function GroupDrawAnimation({ drawData, initialGroups, onFinish }
         {/* Target Group Reveal */}
         {isDrawing && phase === 'revealed' && (
           <div className="reveal-text" style={{ position: 'absolute', bottom: '15%', zIndex: 20 }}>
-             <div style={{ background: 'var(--success-color)', color: '#fff', padding: '0.5rem 1.5rem', borderRadius: '50px', fontSize: '1.5rem', fontWeight: 'bold', boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}>
+             <div style={{ background: 'var(--blue-color)', color: '#fff', padding: '0.5rem 1.5rem', borderRadius: '50px', fontSize: '1.5rem', fontWeight: 'bold', boxShadow: '0 8px 24px rgba(74, 139, 255, 0.4)' }}>
                {(function() {
                  const g = groups.find(g => g.id === currentDraw.groupId);
                  return g ? g.name : '';

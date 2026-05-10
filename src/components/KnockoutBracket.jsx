@@ -1,39 +1,64 @@
 import React from 'react';
 import { Trophy, ArrowLeft } from 'lucide-react';
 
-export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch, winner, onRematch, onBack }) {
+export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch, winner, onRematch, onBack, hideHeader }) {
   
   const isMultiGuest = (settings && settings.mode === 'multi_judge') && !isHost;
   
   // Score changes are now handled by MatchView
+  
+  const getFallbackName = (rIndex, mIndex, playerPos) => {
+    if (rIndex === 0) return 'TBD';
+    const prevRoundName = matches[rIndex - 1].name;
+    let prefix = 'R-';
+    if (prevRoundName === 'Semi Finals') prefix = 'S';
+    else if (prevRoundName === 'Quarter Finals') prefix = 'Q';
+    else if (prevRoundName === 'Round of 16') prefix = '1/8-';
+    else if (prevRoundName === 'Round of 32') prefix = '1/16-';
+    
+    const sourceMatchNum = mIndex * 2 + playerPos;
+    return `${prefix}${sourceMatchNum} Winner`;
+  };
+
+  const getMatchLabel = (roundName, mIndex) => {
+      if (roundName === 'Final') return null;
+      let prefix = 'R-';
+      if (roundName === 'Semi Finals') prefix = 'S';
+      else if (roundName === 'Quarter Finals') prefix = 'Q';
+      else if (roundName === 'Round of 16') prefix = '1/8-';
+      else if (roundName === 'Round of 32') prefix = '1/16-';
+      return `${prefix}${mIndex + 1}`;
+  };
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ width: '80px' }}>
-          {!isMultiGuest && (
-            <button className="secondary" onClick={onBack}>
-              <ArrowLeft size={18} /> Back
-            </button>
-          )}
+      {!hideHeader && (
+        <div className="group-stage-header" style={{ marginBottom: '2rem' }}>
+          <div className="group-stage-header-left">
+            {!isMultiGuest && onBack && (
+              <button className="secondary" onClick={onBack}>
+                <ArrowLeft size={18} /> Back to Groups
+              </button>
+            )}
+          </div>
+          <h2 style={{ margin: 0, textAlign: 'center' }}>Knockout Stage</h2>
+          <div className="group-stage-header-right"></div>
         </div>
-        <h2 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Knockout Stage</h2>
-        <div style={{ width: '80px' }}></div>
-      </div>
+      )}
 
       {winner && (
         <div className="glass-panel" style={{ 
           textAlign: 'center', 
           marginBottom: '3rem',
-          background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(245, 158, 11, 0.1))',
-          borderColor: 'rgba(234, 179, 8, 0.4)',
+          background: 'linear-gradient(135deg, rgba(245, 184, 0, 0.2), rgba(255, 210, 74, 0.1))',
+          borderColor: 'rgba(245, 184, 0, 0.4)',
           animation: 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}>
-          <Trophy size={64} color="#fbbf24" style={{ margin: '0 auto 1rem' }} />
-          <h2 style={{ margin: 0, color: '#fbbf24' }}>Tournament Champion</h2>
-          <h1 style={{ fontSize: '3rem', margin: '1rem 0' }}>{winner.name}</h1>
+          <Trophy size={64} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
+          <h2 style={{ margin: 0, color: 'var(--accent-color)' }}>Tournament Champion</h2>
+          <div style={{ fontSize: '3rem', fontWeight: '800', margin: '1rem 0', color: 'var(--text-primary)', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>{winner.name}</div>
           {!isMultiGuest && (
-            <button onClick={onRematch} style={{ marginTop: '1rem', background: '#fbbf24', color: '#000' }}>
+            <button onClick={onRematch} style={{ marginTop: '1rem', background: 'var(--accent-color)', color: '#1a1300' }}>
               Start Another Tournament
             </button>
           )}
@@ -41,38 +66,51 @@ export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch
       )}
 
       <div className="knockout-rounds">
-        {matches.map((round) => (
+        {matches.map((round, rIndex) => (
           <div key={round.id} className="knockout-round">
             <h3 style={{ textAlign: 'center', color: 'var(--accent-color)' }}>{round.name}</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'center', flex: 1 }}>
-              {round.matches.map(m => (
-                <div key={m.id} className="glass-panel" style={{ padding: '1rem', position: 'relative' }}>
+              {round.matches.map((m, mIndex) => (
+                <div key={m.id} className="glass-panel" style={{ padding: '1rem', position: 'relative', overflow: 'hidden' }}>
+                  {getMatchLabel(round.name, mIndex) && (
+                    <div style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', padding: '0.2rem 0.5rem', borderBottomLeftRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                        {getMatchLabel(round.name, mIndex)}
+                    </div>
+                  )}
                   {m.isBye ? (
                     <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--success-color)', fontWeight: 'bold' }}>
-                      {m.player1.name} (Bye)
-                    </div>
-                  ) : !m.player1 || !m.player2 ? (
-                    <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>
-                      Waiting for players...
+                      {m.player1 ? m.player1.name : getFallbackName(rIndex, mIndex, 1)} (Bye)
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
                       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                         <span style={{ fontWeight: 'bold' }}>{m.player1.name}</span>
-                         {m.isFinished && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p1Legs}</span>}
+                         <span style={{ 
+                            fontWeight: (!m.player1 || m.player1.isPlaceholder) ? 'normal' : 'bold', 
+                            fontStyle: (!m.player1 || m.player1.isPlaceholder) ? 'italic' : 'normal', 
+                            color: (!m.player1 || m.player1.isPlaceholder) ? 'var(--text-secondary)' : 'inherit' 
+                         }}>
+                            {m.player1 ? m.player1.name : getFallbackName(rIndex, mIndex, 1)}
+                         </span>
+                         {m.isFinished && m.player1 && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p1Legs}</span>}
                       </div>
                       <div style={{ height: '1px', background: 'var(--panel-border)', width: '100%', margin: '0.25rem 0' }}></div>
                       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                         <span style={{ fontWeight: 'bold' }}>{m.player2.name}</span>
-                         {m.isFinished && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p2Legs}</span>}
+                         <span style={{ 
+                            fontWeight: (!m.player2 || m.player2.isPlaceholder) ? 'normal' : 'bold', 
+                            fontStyle: (!m.player2 || m.player2.isPlaceholder) ? 'italic' : 'normal', 
+                            color: (!m.player2 || m.player2.isPlaceholder) ? 'var(--text-secondary)' : 'inherit' 
+                         }}>
+                            {m.player2 ? m.player2.name : getFallbackName(rIndex, mIndex, 2)}
+                         </span>
+                         {m.isFinished && m.player2 && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p2Legs}</span>}
                       </div>
 
-                      {!m.isFinished && m.liveState ? (
-                        <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--warning-color)', color: '#000' }}>
+                      {!m.isFinished && m.liveState && m.player1 && m.player2 && !m.player1.isPlaceholder && !m.player2.isPlaceholder ? (
+                        <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--blue-color)', color: '#fff' }}>
                           Continue
                         </button>
-                      ) : !m.isFinished && (
+                      ) : !m.isFinished && m.player1 && m.player2 && !m.player1.isPlaceholder && !m.player2.isPlaceholder && (
                         <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
                           Play Match
                         </button>

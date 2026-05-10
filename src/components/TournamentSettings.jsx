@@ -11,19 +11,7 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
     <div className="glass-panel animate-slide-up" style={{ maxWidth: '600px', margin: '0 auto' }}>
       <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Tournament Rules</h2>
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-          Game Mode
-        </label>
-        <select 
-          value={settings.mode || '1v1'} 
-          onChange={(e) => updateSetting('mode', e.target.value)}
-        >
-          <option value="1v1">1v1 Quick Match</option>
-          <option value="tournament">Tournament (Groups & Knockout)</option>
-          <option value="multi_judge">Multi-device Tournament</option>
-        </select>
-      </div>
+      {/* Game Mode is now selected via Lobby tiles, so we hide it here */}
 
       <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
@@ -54,57 +42,79 @@ export default function TournamentSettings({ settings, setSettings, onNext, onBa
         </select>
       </div>
 
-      <div style={{ marginBottom: '2rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-          Group Stage Format (Best of X Legs)
-        </label>
-        <select 
-          value={settings.bestOf} 
-          onChange={(e) => updateSetting('bestOf', parseInt(e.target.value, 10))}
-        >
-          <option value={1}>Best of 1 (First to 1)</option>
-          <option value={3}>Best of 3 (First to 2)</option>
-          <option value={5}>Best of 5 (First to 3)</option>
-          <option value={7}>Best of 7 (First to 4)</option>
-          <option value={9}>Best of 9 (First to 5)</option>
-        </select>
-      </div>
+      {/* Match Format Settings */}
+      {(settings.mode === '1v1' || settings.mode === '1v1_bot') ? (
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+            Match Format (Best of X Legs)
+          </label>
+          <select 
+            value={settings.bestOf} 
+            onChange={(e) => updateSetting('bestOf', parseInt(e.target.value, 10))}
+          >
+            <option value={1}>Best of 1 (First to 1)</option>
+            <option value={3}>Best of 3 (First to 2)</option>
+            <option value={5}>Best of 5 (First to 3)</option>
+            <option value={7}>Best of 7 (First to 4)</option>
+            <option value={9}>Best of 9 (First to 5)</option>
+            <option value={11}>Best of 11 (First to 6)</option>
+          </select>
+        </div>
+      ) : (
+        <>
+          <div style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+              Group Stage Format (Best of X Legs)
+            </label>
+            <select 
+              value={settings.bestOf} 
+              onChange={(e) => updateSetting('bestOf', parseInt(e.target.value, 10))}
+            >
+              <option value={1}>Best of 1 (First to 1)</option>
+              <option value={3}>Best of 3 (First to 2)</option>
+              <option value={5}>Best of 5 (First to 3)</option>
+              <option value={7}>Best of 7 (First to 4)</option>
+              <option value={9}>Best of 9 (First to 5)</option>
+            </select>
+          </div>
 
-      <div style={{ marginBottom: '2rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-          Knockout Stage Format (Best of X Legs)
-        </label>
-        <select 
-          value={settings.knockoutBestOf} 
-          onChange={(e) => updateSetting('knockoutBestOf', parseInt(e.target.value, 10))}
-        >
-          <option value={1}>Best of 1 (First to 1)</option>
-          <option value={3}>Best of 3 (First to 2)</option>
-          <option value={5}>Best of 5 (First to 3)</option>
-          <option value={7}>Best of 7 (First to 4)</option>
-          <option value={9}>Best of 9 (First to 5)</option>
-        </select>
-      </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+              Knockout Stage Format (Best of X Legs)
+            </label>
+            <select 
+              value={settings.knockoutBestOf} 
+              onChange={(e) => updateSetting('knockoutBestOf', parseInt(e.target.value, 10))}
+            >
+              <option value={1}>Best of 1 (First to 1)</option>
+              <option value={3}>Best of 3 (First to 2)</option>
+              <option value={5}>Best of 5 (First to 3)</option>
+              <option value={7}>Best of 7 (First to 4)</option>
+              <option value={9}>Best of 9 (First to 5)</option>
+            </select>
+          </div>
 
-      <div style={{ marginBottom: '2rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-          Group Draw Animation
-        </label>
-        <select 
-          value={settings.showGroupDrawAnimation !== false ? 'yes' : 'no'} 
-          onChange={(e) => updateSetting('showGroupDrawAnimation', e.target.value === 'yes')}
-        >
-          <option value="yes">Yes (Show cool dart animation)</option>
-          <option value="no">No (Skip directly to groups)</option>
-        </select>
-      </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+              Group Draw Animation
+            </label>
+            <select 
+              value={settings.showGroupDrawAnimation !== false ? 'yes' : 'no'} 
+              onChange={(e) => updateSetting('showGroupDrawAnimation', e.target.value === 'yes')}
+            >
+              <option value="yes">Yes (Show cool dart animation)</option>
+              <option value="no">No (Skip directly to groups)</option>
+            </select>
+          </div>
+        </>
+      )}
 
       <div className="flex" style={{ justifyContent: 'space-between' }}>
         <button className="secondary" onClick={onBack}>
           <ArrowLeft size={18} /> Back
         </button>
         <button onClick={onNext}>
-          {settings.mode === '1v1' ? 'Start Match' : 'Proceed to Group Setup'} <ArrowRight size={18} />
+          {(settings.mode === '1v1' || settings.mode === '1v1_bot') ? 'Start Match' : 'Proceed to Group Setup'} <ArrowRight size={18} />
         </button>
       </div>
     </div>

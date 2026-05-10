@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Trophy, Target, Activity } from 'lucide-react';
-import { calculateGroupStandings, calculateAdvancementOdds, calculateGlobalStats } from '../lib/tournamentUtils';
+import { calculateGroupStandings, calculateAdvancementOdds, calculateGlobalStats, getMatchupProbability } from '../lib/tournamentUtils';
 import { PHASES } from '../lib/useTournamentState';
 
 export default function Screensaver({ players, groups, groupMatches, knockouts, phase, settings, globalHistory, onClose }) {
@@ -61,12 +61,12 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
                   </thead>
                   <tbody>
                     {standings.map((p, i) => (
-                      <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', backgroundColor: i < 2 ? 'rgba(16, 185, 129, 0.15)' : 'transparent' }}>
+                      <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', backgroundColor: i < 2 ? 'rgba(74, 139, 255, 0.15)' : 'transparent' }}>
                         <td style={{ padding: '1rem' }}>{i + 1}</td>
                         <td style={{ padding: '1rem', fontWeight: 'bold' }}>{p.name}</td>
                         <td style={{ padding: '1rem', textAlign: 'center' }}>{p.played}</td>
                         <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--accent-color)', textAlign: 'center' }}>{p.points}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', color: (odds[p.id] > 50) ? 'var(--success-color)' : ((odds[p.id] > 0) ? 'var(--warning-color)' : 'var(--danger-color)') }}>
+                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', color: odds[p.id] >= 70 ? 'var(--blue-color)' : (odds[p.id] >= 30 ? 'var(--warning-color)' : 'var(--danger-color)') }}>
                             {odds[p.id] !== undefined ? `${odds[p.id]}%` : '-'}
                         </td>
                       </tr>
@@ -90,20 +90,32 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
         
         if (upcoming.length === 0) return <div style={{textAlign: 'center', fontSize: '3rem', color: 'var(--success-color)'}}>Group Stage Finished!</div>;
 
+        const allMatches = [...Object.values(groupMatches || {}).flat(), ...(knockouts || []).flatMap(r => r.matches)];
+
         return (
             <div className="glass-panel" style={{ width: '90%', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s' }}>
                 <h2 style={{ textAlign: 'center', fontSize: '3rem', marginBottom: '2rem', color: 'var(--accent-color)' }}>Upcoming Matches</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {upcoming.slice(0, 4).map(m => (
-                        <div key={m.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'right' }}>{m.player1.name}</div>
-                            <div style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', padding: '0 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', color: 'var(--accent-color)' }}>{m.roundName}</span>
-                                vs
+                    {upcoming.slice(0, 4).map(m => {
+                        const prob1 = Math.round(getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) * 100);
+                        const prob2 = 100 - prob1;
+                        return (
+                            <div key={m.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    {m.player1.name}
+                                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>{prob1}%</span>
+                                </div>
+                                <div style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', padding: '0 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', color: 'var(--accent-color)' }}>{m.roundName}</span>
+                                    vs
+                                </div>
+                                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    {m.player2.name}
+                                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>{prob2}%</span>
+                                </div>
                             </div>
-                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'left' }}>{m.player2.name}</div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -122,20 +134,32 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
 
         if (upcoming.length === 0) return <div style={{textAlign: 'center', fontSize: '3rem', color: 'var(--success-color)'}}>Tournament Finished!</div>;
 
+        const allMatches = [...Object.values(groupMatches || {}).flat(), ...(knockouts || []).flatMap(r => r.matches)];
+
         return (
             <div className="glass-panel" style={{ width: '90%', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s' }}>
                 <h2 style={{ textAlign: 'center', fontSize: '3rem', marginBottom: '2rem', color: 'var(--accent-color)' }}>Knockout Stage</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {upcoming.slice(0, 4).map(m => (
-                        <div key={m.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'right' }}>{m.player1.name}</div>
-                            <div style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', padding: '0 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', color: 'var(--accent-color)' }}>{m.roundName}</span>
-                                vs
+                    {upcoming.slice(0, 4).map(m => {
+                        const prob1 = Math.round(getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) * 100);
+                        const prob2 = 100 - prob1;
+                        return (
+                            <div key={m.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    {m.player1.name}
+                                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>{prob1}%</span>
+                                </div>
+                                <div style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', padding: '0 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', color: 'var(--accent-color)' }}>{m.roundName}</span>
+                                    vs
+                                </div>
+                                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    {m.player2.name}
+                                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>{prob2}%</span>
+                                </div>
                             </div>
-                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', width: '40%', textAlign: 'left' }}>{m.player2.name}</div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -155,10 +179,10 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
-                        <Trophy size={48} color="#f59e0b" style={{ margin: '0 auto 1rem auto' }} />
+                        <Trophy size={48} color="var(--warning-color)" style={{ margin: '0 auto 1rem auto' }} />
                         <h3 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 60+</h3>
-                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#f59e0b', marginBottom: '0.5rem' }}>{globalStats.most60plus.count || '0'}</div>
-                        <div style={{ fontSize: '1.2rem', color: '#f59e0b' }}>{globalStats.most60plus.player || 'None yet'}</div>
+                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>{globalStats.most60plus.count || '0'}</div>
+                        <div style={{ fontSize: '1.2rem', color: 'var(--warning-color)' }}>{globalStats.most60plus.player || 'None yet'}</div>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
@@ -180,8 +204,8 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
             position: 'fixed',
             inset: 0,
             zIndex: 999999,
-            backgroundColor: '#050505',
-            backgroundImage: 'radial-gradient(circle at 50% 50%, #151820 0%, #000 100%)',
+            backgroundColor: 'var(--bg-color)',
+            backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -10%, var(--accent-soft) 0%, transparent 60%)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',

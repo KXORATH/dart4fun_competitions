@@ -41,7 +41,7 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
   const lastLocalSnapshotRef = useRef(null);
   
   const [isSpectator, setIsSpectator] = useState(false);
-  const [keyboardType, setKeyboardType] = useState('standard');
+  const [keyboardType, setKeyboardType] = useState('quick');
   const [matchFinishedState, setMatchFinishedState] = useState(null);
   const [scoreAnimation, setScoreAnimation] = useState(null);
   
@@ -658,7 +658,12 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
         {/* Middle Row: Scores and Legs */}
         <div className="scoreboard-row">
           {/* P1 Score */}
-          <div className="score-cell" style={{ textShadow: currentPlayer === 1 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 1 ? 1 : 0.5 }}>
+          <div className="score-cell" style={{ 
+            color: currentPlayer === 1 ? 'var(--accent-color)' : 'var(--text-primary)',
+            opacity: currentPlayer === 1 ? 1 : 0.4,
+            transform: currentPlayer === 1 ? 'scale(1.05)' : 'scale(0.95)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}>
             {p1Score}
           </div>
           
@@ -674,7 +679,12 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
           </div>
 
           {/* P2 Score */}
-          <div className="score-cell" style={{ textShadow: currentPlayer === 2 ? '0 0 20px rgba(99, 102, 241, 0.4)' : 'none', opacity: currentPlayer === 2 ? 1 : 0.5 }}>
+          <div className="score-cell" style={{ 
+            color: currentPlayer === 2 ? 'var(--accent-color)' : 'var(--text-primary)',
+            opacity: currentPlayer === 2 ? 1 : 0.4,
+            transform: currentPlayer === 2 ? 'scale(1.05)' : 'scale(0.95)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}>
             {p2Score}
           </div>
         </div>
@@ -749,14 +759,14 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                       {num}
                     </button>
                   ))}
-                  <button className="secondary numpad-btn" onClick={handleUndo}>
+                  <button className="numpad-btn" style={{ background: 'var(--blue-color)', color: '#fff', borderColor: 'var(--blue-color)' }} onClick={handleUndo}>
                     <Undo size={24} />
                   </button>
                   <button className="secondary numpad-btn" onClick={() => handleInput('0')}>
                     0
                   </button>
-                  <button className="secondary numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
-                    <Delete size={32} strokeWidth={1.5} />
+                  <button className="numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--danger-color)', color: '#fff', borderColor: 'var(--danger-color)' }} onClick={handleBackspace}>
+                    <Delete size={32} strokeWidth={2.5} />
                   </button>
                 </div>
             ) : (
@@ -767,14 +777,14 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                                 {num}
                             </button>
                         ))}
-                        <button className="secondary numpad-btn" onClick={handleUndo}>
+                        <button className="numpad-btn" style={{ background: 'var(--blue-color)', color: '#fff', borderColor: 'var(--blue-color)' }} onClick={handleUndo}>
                             <Undo size={20} />
                         </button>
                         <button className="secondary numpad-btn" onClick={() => handleInput('0')}>
                             0
                         </button>
-                        <button className="secondary numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={handleBackspace}>
-                            <Delete size={24} strokeWidth={1.5} />
+                        <button className="numpad-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--danger-color)', color: '#fff', borderColor: 'var(--danger-color)' }} onClick={handleBackspace}>
+                            <Delete size={24} strokeWidth={2.5} />
                         </button>
                     </div>
                     <div className="quick-scores-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
