@@ -246,8 +246,40 @@ input:focus, select:focus {
 /* Group Match Cards */
 .group-match-card {
   background: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 8px;
+}
+
+.group-match-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+}
+
+.group-match-player {
+  font-weight: bold;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-match-player-left {
+  text-align: left;
+}
+
+.group-match-player-right {
+  text-align: right;
+}
+
+.group-match-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .card-hover-effect {
