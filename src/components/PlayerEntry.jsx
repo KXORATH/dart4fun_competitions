@@ -88,11 +88,11 @@ export default function PlayerEntry({ players, setPlayers, settings, onNext, onB
         </form>
       )}
 
-      {!is1v1Mode && (
+      {settings?.mode !== '1v1' && (
         <div className="flex gap-2 mb-8 items-center" style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
-                  <span>DartBot</span>
+                  <span>DartBot difficulty</span>
                   <span style={{ fontWeight: 'bold', color: 'var(--accent-color)' }}>Avg: {botAverage}</span>
               </div>
               <input 
@@ -101,13 +101,22 @@ export default function PlayerEntry({ players, setPlayers, settings, onNext, onB
                   max="100" 
                   step="5" 
                   value={botAverage} 
-                  onChange={(e) => setBotAverage(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setBotAverage(val);
+                    // update the bot player live if already in the list
+                    if (settings?.mode === '1v1_bot') {
+                      setPlayers(prev => prev.map(p => p.isBot ? { ...p, botAverage: val, name: `DartBot (avg: ${val})` } : p));
+                    }
+                  }}
                   style={{ width: '100%', accentColor: 'var(--accent-color)' }}
               />
           </div>
-          <button type="button" onClick={handleAddBot} className="secondary" style={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
-            <UserPlus size={18} /> Add Bot
-          </button>
+          {!is1v1Mode && (
+            <button type="button" onClick={handleAddBot} className="secondary" style={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
+              <UserPlus size={18} /> Add Bot
+            </button>
+          )}
         </div>
       )}
 
