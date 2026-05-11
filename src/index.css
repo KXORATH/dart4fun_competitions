@@ -283,9 +283,10 @@ input:focus, select:focus {
 }
 
 .card-hover-effect {
-  /* Hover effects moved from inline JSX */
+  /* base card styles */
 }
-.card-hover-effect[onClick]:hover {
+
+.card-clickable:hover {
   border-color: var(--accent-color) !important;
   transform: translateY(-5px) !important;
   box-shadow: 0 10px 25px rgba(245, 184, 0, 0.15) !important;

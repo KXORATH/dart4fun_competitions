@@ -3,7 +3,7 @@ import { Target, Cpu, MonitorPlay, Smartphone, LogIn, PlaySquare } from 'lucide-
 
 const Card = ({ icon: Icon, title, desc, onClick, children }) => (
   <div 
-    className="glass-panel card-hover-effect" 
+    className={`glass-panel card-hover-effect${onClick ? ' card-clickable' : ''}`}
     onClick={onClick}
     style={{ 
       padding: '2rem', 
