@@ -9,16 +9,14 @@ export default function PlayerEntry({ players, setPlayers, settings, onNext, onB
   const [hasInitializedBot, setHasInitializedBot] = useState(false);
 
   React.useEffect(() => {
-    if (settings && settings.mode === '1v1_bot' && players.length === 2 && !players[1].isBot && !hasInitializedBot) {
+    if (settings && settings.mode === '1v1_bot' && players.length === 1 && !hasInitializedBot) {
       setHasInitializedBot(true);
-      const newPlayers = [...players];
-      newPlayers[1] = { 
+      setPlayers([...players, { 
         id: generateId(), 
         name: `DartBot (avg: 40)`, 
         isBot: true, 
         botAverage: 40 
-      };
-      setPlayers(newPlayers);
+      }]);
     }
   }, [settings, players, setPlayers, hasInitializedBot]);
 
