@@ -126,8 +126,16 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, g
                             <button onClick={() => onPlayGroupMatch(group.id, m.id)} className="group-match-btn">
                               Play Match
                             </button>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                              [ {Math.round(getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) * 100)}% - {Math.round((1 - getMatchupProbability(m.player1, m.player2, globalHistory, allMatches)) * 100)}% ]
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                              <span>[</span>
+                              <span style={{ color: getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) >= 0.7 ? 'var(--blue-color)' : (getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) >= 0.3 ? 'var(--warning-color)' : 'var(--danger-color)') }}>
+                                {Math.round(getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) * 100)}%
+                              </span>
+                              <span>-</span>
+                              <span style={{ color: (1 - getMatchupProbability(m.player1, m.player2, globalHistory, allMatches)) >= 0.7 ? 'var(--blue-color)' : ((1 - getMatchupProbability(m.player1, m.player2, globalHistory, allMatches)) >= 0.3 ? 'var(--warning-color)' : 'var(--danger-color)') }}>
+                                {Math.round((1 - getMatchupProbability(m.player1, m.player2, globalHistory, allMatches)) * 100)}%
+                              </span>
+                              <span>]</span>
                             </div>
                           </>
                         )}
