@@ -9,18 +9,18 @@ export default function PlayerEntry({ players, setPlayers, settings, onNext, onB
   const [hasInitializedBot, setHasInitializedBot] = useState(false);
 
   React.useEffect(() => {
-    if (settings && settings.mode === '1v1_bot' && players.length === 1 && !hasInitializedBot) {
+    if (settings && settings.mode === '1v1_bot' && players.length === 2 && !players[1].isBot && !hasInitializedBot) {
       setHasInitializedBot(true);
-      setPlayers([...players, { 
+      const newPlayers = [...players];
+      newPlayers[1] = { 
         id: generateId(), 
-        name: `DartBot (avg: ${botAverage})`, 
+        name: `DartBot (avg: 40)`, 
         isBot: true, 
-        botAverage 
-      }]);
+        botAverage: 40 
+      };
+      setPlayers(newPlayers);
     }
-  // Only run once on initial mount for bot mode
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings?.mode]);
+  }, [settings, players, setPlayers, hasInitializedBot]);
 
   const handleAddPlayer = (e) => {
     e.preventDefault();
@@ -65,60 +65,43 @@ export default function PlayerEntry({ players, setPlayers, settings, onNext, onB
     setDraggedItemIndex(null);
   };
 
-  const is1v1Mode = settings?.mode === '1v1' || settings?.mode === '1v1_bot';
-  const maxPlayers = is1v1Mode ? 2 : 99;
-  const canAddMore = players.length < maxPlayers;
-
   return (
     <div className="glass-panel animate-slide-up" style={{ maxWidth: '600px', margin: '0 auto' }}>
       <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Registration Phase</h2>
       
-      {canAddMore && (
-        <form onSubmit={handleAddPlayer} className="flex gap-2 mb-4">
-          <input 
-            type="text" 
-            value={newPlayerName}
-            onChange={(e) => setNewPlayerName(e.target.value)}
-            placeholder="Enter player name..."
-            autoFocus
-          />
-          <button type="submit">
-            <UserPlus size={18} /> Add Player
-          </button>
-        </form>
-      )}
+      <form onSubmit={handleAddPlayer} className="flex gap-2 mb-4">
+        <input 
+          type="text" 
+          value={newPlayerName}
+          onChange={(e) => setNewPlayerName(e.target.value)}
+          placeholder="Enter player name..."
+          autoFocus
+        />
+        <button type="submit">
+          <UserPlus size={18} /> Add Player
+        </button>
+      </form>
 
-      {settings?.mode !== '1v1' && (
-        <div className="flex gap-2 mb-8 items-center" style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
-                  <span>DartBot difficulty</span>
-                  <span style={{ fontWeight: 'bold', color: 'var(--accent-color)' }}>Avg: {botAverage}</span>
-              </div>
-              <input 
-                  type="range" 
-                  min="20" 
-                  max="100" 
-                  step="5" 
-                  value={botAverage} 
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    setBotAverage(val);
-                    // update the bot player live if already in the list
-                    if (settings?.mode === '1v1_bot') {
-                      setPlayers(prev => prev.map(p => p.isBot ? { ...p, botAverage: val, name: `DartBot (avg: ${val})` } : p));
-                    }
-                  }}
-                  style={{ width: '100%', accentColor: 'var(--accent-color)' }}
-              />
-          </div>
-          {!is1v1Mode && (
-            <button type="button" onClick={handleAddBot} className="secondary" style={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
-              <UserPlus size={18} /> Add Bot
-            </button>
-          )}
+      <div className="flex gap-2 mb-8 items-center" style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+                <span>DartBot</span>
+                <span style={{ fontWeight: 'bold', color: 'var(--accent-color)' }}>Avg: {botAverage}</span>
+            </div>
+            <input 
+                type="range" 
+                min="20" 
+                max="100" 
+                step="5" 
+                value={botAverage} 
+                onChange={(e) => setBotAverage(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--accent-color)' }}
+            />
         </div>
-      )}
+        <button type="button" onClick={handleAddBot} className="secondary" style={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
+          <UserPlus size={18} /> Add Bot
+        </button>
+      </div>
 
       <div style={{ marginBottom: '2rem' }}>
         <h3 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
