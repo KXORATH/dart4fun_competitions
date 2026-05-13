@@ -101,70 +101,60 @@ function App() {
   };
 
   const generateKnockoutMatches = (advancingPlayers) => {
+    let rounds = [];
     const N = advancingPlayers.length;
     let P = 1;
-    while (P < N) P *= 2;
-
-    // Standard single-elimination seeding: seed 1 and 2 on opposite ends of bracket
-    // buildSeedOrder(size)[slot] = which seed (1-indexed) occupies that bracket slot
-    function buildSeedOrder(size) {
-      if (size === 2) return [1, 2];
-      const prev = buildSeedOrder(size / 2);
-      const result = [];
-      for (const s of prev) {
-        result.push(s);
-        result.push(size + 1 - s); // complement seed goes to opposite side
-      }
-      return result;
-    }
-
-    const seedOrder = buildSeedOrder(P);
-
-    // Place players into bracket slots; remaining slots are byes (null)
-    const bracketSlots = new Array(P).fill(null);
-    for (let slot = 0; slot < P; slot++) {
-      const seed = seedOrder[slot];
-      if (seed <= N) bracketSlots[slot] = advancingPlayers[seed - 1];
-    }
-
-    // Build first-round matches from paired slots
+    while(P < N) P *= 2;
+    
+    const byes = P - N;
     const initialMatches = [];
-    for (let i = 0; i < P; i += 2) {
-      const p1 = bracketSlots[i];
-      const p2 = bracketSlots[i + 1];
-      if (p1 && p2) {
-        initialMatches.push({ id: generateId(), player1: p1, player2: p2, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
-      } else {
-        const real = p1 || p2;
-        initialMatches.push({ id: generateId(), player1: real, player2: null, p1Legs: null, p2Legs: null, isFinished: true, winner: real, isBye: true });
-      }
+    let playerIndex = 0;
+    const numInitialMatches = P / 2;
+    
+    for (let i = 0; i < numInitialMatches; i++) {
+        if (i < byes) {
+            const p1 = advancingPlayers[playerIndex++];
+            initialMatches.push({
+                id: generateId(),
+                player1: p1,
+                player2: null,
+                p1Legs: null,
+                p2Legs: null,
+                isFinished: true,
+                winner: p1,
+                isBye: true
+            });
+        } else {
+            const p1 = advancingPlayers[playerIndex++];
+            const p2 = advancingPlayers[playerIndex++];
+            initialMatches.push({ id: generateId(), player1: p1, player2: p2, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
+        }
     }
 
     let roundName = 'Round of ' + P;
     if (P === 8) roundName = 'Quarter Finals';
     if (P === 4) roundName = 'Semi Finals';
     if (P === 2) roundName = 'Final';
-
+    
     let roundIndex = 0;
-    const rounds = [];
     rounds.push({ id: `r_${roundIndex}`, name: roundName, matches: initialMatches });
 
-    let numMatches = P / 2;
+    let numMatches = numInitialMatches;
     while (numMatches > 1) {
       roundIndex++;
       numMatches = numMatches / 2;
       const nextMatches = [];
-      const prevRoundName = rounds[roundIndex - 1].name;
+      const prevRoundName = rounds[roundIndex-1].name;
       let prefix = 'R-';
       if (prevRoundName === 'Semi Finals') prefix = 'S';
       else if (prevRoundName === 'Quarter Finals') prefix = 'Q';
       else if (prevRoundName === 'Round of 16') prefix = '1/8-';
       else if (prevRoundName === 'Round of 32') prefix = '1/16-';
-
-      for (let i = 0; i < numMatches; i++) {
-        const p1ph = { isPlaceholder: true, name: `${prefix}${i * 2 + 1} Winner` };
-        const p2ph = { isPlaceholder: true, name: `${prefix}${i * 2 + 2} Winner` };
-        nextMatches.push({ id: generateId(), player1: p1ph, player2: p2ph, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
+      
+      for(let i=0; i<numMatches; i++) {
+        const p1Placeholder = { isPlaceholder: true, name: `${prefix}${i*2 + 1} Winner` };
+        const p2Placeholder = { isPlaceholder: true, name: `${prefix}${i*2 + 2} Winner` };
+        nextMatches.push({ id: generateId(), player1: p1Placeholder, player2: p2Placeholder, p1Legs: null, p2Legs: null, isFinished: false, winner: null, isBye: false });
       }
       let nName = 'Round of ' + (numMatches * 2);
       if (numMatches === 4) nName = 'Quarter Finals';
@@ -173,18 +163,16 @@ function App() {
       rounds.push({ id: `r_${roundIndex}`, name: nName, matches: nextMatches });
     }
 
-    // Advance bye winners to the next round
     initialMatches.forEach((m, idx) => {
-      if (m.isBye && rounds.length > 1) {
-        const nextMatchIndex = Math.floor(idx / 2);
-        const nextPlayerPos = idx % 2 === 0 ? 'player1' : 'player2';
-        rounds[1].matches[nextMatchIndex][nextPlayerPos] = m.winner;
-      }
+        if(m.isBye && rounds.length > 1) {
+            const nextRound = rounds[1];
+            const nextMatchIndex = Math.floor(idx / 2);
+            const nextPlayerPos = idx % 2 === 0 ? 'player1' : 'player2';
+            nextRound.matches[nextMatchIndex][nextPlayerPos] = m.winner;
+        }
     });
-
     return rounds;
   };
-
 
   // startKnockouts removed because knockouts are created immediately with placeholders
 
