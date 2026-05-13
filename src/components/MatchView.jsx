@@ -714,15 +714,52 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
                 <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
                     How many darts did you throw?
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 1)}>1 Dart</button>
-                    <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 2)}>2 Darts</button>
-                    <button className="primary" onClick={() => processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, 3)}>3 Darts</button>
-                </div>
+                {(() => {
+                  const score = pendingDartPrompt.score;
+                  const isBust = pendingDartPrompt.isBust;
+                  let minDarts = 1;
+                  if (!isBust) {
+                    if (settings.checkoutType === 'double') {
+                      // 1-dart double-out: only valid doubles and bull
+                      const validDoubles = new Set([2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,50]);
+                      if (!validDoubles.has(score)) minDarts = 2;   // not a double
+                      if (score > 110) minDarts = 3;                // max 2-dart double-out = T20+D25 = 110
+                    } else {
+                      // Straight-out: build exact set of achievable 1-dart scores
+                      const oneDart = new Set([25, 50]);
+                      for (let i = 1; i <= 20; i++) {
+                        oneDart.add(i);        // singles 1-20
+                        oneDart.add(i * 2);    // doubles 2-40
+                        oneDart.add(i * 3);    // trebles 3-60
+                      }
+                      if (!oneDart.has(score)) minDarts = 2;  // e.g. 59, 41, 43...
+                      if (score > 120) minDarts = 3;          // max 2 darts = T20+T20 = 120
+                    }
+                  }
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+                      {[1, 2, 3].map(n => {
+                        const disabled = n < minDarts;
+                        return (
+                          <button
+                            key={n}
+                            className="primary"
+                            onClick={() => !disabled && processThrow(pendingDartPrompt.score, pendingDartPrompt.isBust, n)}
+                            disabled={disabled}
+                            style={disabled ? { opacity: 0.25, cursor: 'not-allowed' } : {}}
+                          >
+                            {n} Dart{n > 1 ? 's' : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
                 <button className="secondary" style={{ width: '100%' }} onClick={() => setPendingDartPrompt(null)}>
                     Cancel
                 </button>
             </div>
+
           ) : (
           <div className="glass-panel input-panel" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
             <div className="input-prompt" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
