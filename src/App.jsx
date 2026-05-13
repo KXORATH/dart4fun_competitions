@@ -42,14 +42,60 @@ function App() {
 
   const handleGroupsCreated = (newGroups, initialMatches) => {
     const N = newGroups.length;
-    const advancingPlaceholders = [];
-    for(let i = 0; i < N; i++) {
-        const firstGroup = newGroups[i];
-        const secondGroupIndex = (N - 1 - i) % N;
-        const secondGroup = newGroups[secondGroupIndex];
-        advancingPlaceholders.push({ isPlaceholder: true, name: `${firstGroup.name}-1st`, groupId: firstGroup.id, rank: 1 });
-        advancingPlaceholders.push({ isPlaceholder: true, name: `${secondGroup.name}-2nd`, groupId: secondGroup.id, rank: 2 });
+    const firsts = newGroups.map(g => ({ isPlaceholder: true, name: `${g.name}-1st`, groupId: g.id, rank: 1 }));
+    const seconds = newGroups.map(g => ({ isPlaceholder: true, name: `${g.name}-2nd`, groupId: g.id, rank: 2 }));
+
+    const totalPlayers = 2 * N;
+    let P = 1;
+    while (P < totalPlayers) P *= 2;
+    const numByes = P - totalPlayers;
+
+    // Byes go to rank-1 players (group winners) first, then rank-2 if more byes needed
+    const byePlayers = [
+      ...firsts.slice(0, Math.min(numByes, N)),
+      ...seconds.slice(0, Math.max(0, numByes - N)),
+    ];
+
+    // Remaining players must play in QF matches
+    const remainingFirsts = firsts.slice(Math.min(numByes, N));
+    const remainingSeconds = [...seconds.slice(Math.max(0, numByes - N))];
+
+    // Greedily pair remaining players avoiding same-group matchups (most-distant group first)
+    const qfPairs = [];
+    const unpaired = [...remainingSeconds];
+
+    const groupIdx = (p) => newGroups.findIndex(g => g.id === p.groupId);
+    const dist = (a, b) => {
+      const d = Math.abs(groupIdx(a) - groupIdx(b));
+      return Math.min(d, N - d);
+    };
+    const pickOpponent = (player, pool) => {
+      const candidates = pool.filter(p => p.groupId !== player.groupId);
+      const source = candidates.length > 0 ? candidates : pool;
+      source.sort((a, b) => dist(player, b) - dist(player, a) || groupIdx(b) - groupIdx(a));
+      return source[0];
+    };
+
+    // Pair each remaining first with a second
+    for (const first of remainingFirsts) {
+      const opp = pickOpponent(first, unpaired);
+      unpaired.splice(unpaired.indexOf(opp), 1);
+      qfPairs.push([first, opp]);
     }
+    // Pair remaining seconds with each other
+    while (unpaired.length >= 2) {
+      const a = unpaired.shift();
+      const opp = pickOpponent(a, unpaired);
+      unpaired.splice(unpaired.indexOf(opp), 1);
+      qfPairs.push([a, opp]);
+    }
+
+    // Build flat advancingPlaceholders: byes first, then QF pairs interleaved
+    const advancingPlaceholders = [
+      ...byePlayers,
+      ...qfPairs.flatMap(([p1, p2]) => [p1, p2]),
+    ];
+
     const initialKnockouts = generateKnockoutMatches(advancingPlaceholders);
     updateState({ groups: newGroups, groupMatches: initialMatches, knockouts: initialKnockouts, phase: PHASES.GROUP_STAGE });
   };

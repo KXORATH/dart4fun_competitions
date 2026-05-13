@@ -81,7 +81,7 @@ export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch
                   )}
                   {m.isBye ? (
                     <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--success-color)', fontWeight: 'bold' }}>
-                      {m.player1 ? m.player1.name : getFallbackName(rIndex, mIndex, 1)} (Bye)
+                      {m.player1 ? m.player1.name : getFallbackName(rIndex, mIndex, 1)}
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
