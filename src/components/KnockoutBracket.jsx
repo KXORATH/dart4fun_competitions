@@ -85,52 +85,60 @@ export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                         <span style={{ 
-                            fontWeight: (!m.player1 || m.player1.isPlaceholder) ? 'normal' : 'bold', 
-                            fontStyle: (!m.player1 || m.player1.isPlaceholder) ? 'italic' : 'normal', 
-                            color: (!m.player1 || m.player1.isPlaceholder) ? 'var(--text-secondary)' : 'inherit' 
-                         }}>
-                            {m.player1 ? m.player1.name : getFallbackName(rIndex, mIndex, 1)}
-                         </span>
-                         {m.isFinished && m.player1 && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p1Legs}</span>}
-                      </div>
-                      <div style={{ height: '1px', background: 'var(--panel-border)', width: '100%', margin: '0.25rem 0' }}></div>
-                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                         <span style={{ 
-                            fontWeight: (!m.player2 || m.player2.isPlaceholder) ? 'normal' : 'bold', 
-                            fontStyle: (!m.player2 || m.player2.isPlaceholder) ? 'italic' : 'normal', 
-                            color: (!m.player2 || m.player2.isPlaceholder) ? 'var(--text-secondary)' : 'inherit' 
-                         }}>
-                            {m.player2 ? m.player2.name : getFallbackName(rIndex, mIndex, 2)}
-                         </span>
-                         {m.isFinished && m.player2 && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p2Legs}</span>}
-                      </div>
+                      {(() => {
+                        const showOdds = !m.isFinished && m.player1 && m.player2 && !m.player1.isPlaceholder && !m.player2.isPlaceholder;
+                        const p1prob = showOdds ? getMatchupProbability(m.player1, m.player2, globalHistory, allMatches) : null;
+                        const p2prob = showOdds ? 1 - p1prob : null;
+                        const getColor = (p) => p >= 0.6 ? 'var(--blue-color)' : (p >= 0.4 ? 'var(--warning-color)' : 'var(--danger-color)');
+                        return (
+                          <>
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                {showOdds && (
+                                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: getColor(p1prob), minWidth: '2.5rem', textAlign: 'right' }}>
+                                    {Math.round(p1prob * 100)}%
+                                  </span>
+                                )}
+                                <span style={{ 
+                                  fontWeight: (!m.player1 || m.player1.isPlaceholder) ? 'normal' : 'bold', 
+                                  fontStyle: (!m.player1 || m.player1.isPlaceholder) ? 'italic' : 'normal', 
+                                  color: (!m.player1 || m.player1.isPlaceholder) ? 'var(--text-secondary)' : 'inherit' 
+                                }}>
+                                  {m.player1 ? m.player1.name : getFallbackName(rIndex, mIndex, 1)}
+                                </span>
+                              </div>
+                              {m.isFinished && m.player1 && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p1Legs}</span>}
+                            </div>
+                            <div style={{ height: '1px', background: 'var(--panel-border)', width: '100%', margin: '0.25rem 0' }}></div>
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                {showOdds && (
+                                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: getColor(p2prob), minWidth: '2.5rem', textAlign: 'right' }}>
+                                    {Math.round(p2prob * 100)}%
+                                  </span>
+                                )}
+                                <span style={{ 
+                                  fontWeight: (!m.player2 || m.player2.isPlaceholder) ? 'normal' : 'bold', 
+                                  fontStyle: (!m.player2 || m.player2.isPlaceholder) ? 'italic' : 'normal', 
+                                  color: (!m.player2 || m.player2.isPlaceholder) ? 'var(--text-secondary)' : 'inherit' 
+                                }}>
+                                  {m.player2 ? m.player2.name : getFallbackName(rIndex, mIndex, 2)}
+                                </span>
+                              </div>
+                              {m.isFinished && m.player2 && <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.p2Legs}</span>}
+                            </div>
+                          </>
+                        );
+                      })()}
 
                       {!m.isFinished && m.liveState && m.player1 && m.player2 && !m.player1.isPlaceholder && !m.player2.isPlaceholder ? (
                         <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--blue-color)', color: '#fff' }}>
                           Continue
                         </button>
                       ) : !m.isFinished && m.player1 && m.player2 && !m.player1.isPlaceholder && !m.player2.isPlaceholder && (
-                        <>
-                          <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                            Play Match
-                          </button>
-                          {(() => {
-                            const p1prob = getMatchupProbability(m.player1, m.player2, globalHistory, allMatches);
-                            const p2prob = 1 - p1prob;
-                            const getColor = (p) => p >= 0.6 ? 'var(--blue-color)' : (p >= 0.4 ? 'var(--warning-color)' : 'var(--danger-color)');
-                            return (
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
-                                <span>[</span>
-                                <span style={{ color: getColor(p1prob) }}>{Math.round(p1prob * 100)}%</span>
-                                <span>-</span>
-                                <span style={{ color: getColor(p2prob) }}>{Math.round(p2prob * 100)}%</span>
-                                <span>]</span>
-                              </div>
-                            );
-                          })()}
-                        </>
+                        <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                          Play Match
+                        </button>
                       )}
                     </div>
                   )}
