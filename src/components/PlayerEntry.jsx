@@ -6,19 +6,6 @@ export default function PlayerEntry({ players, setPlayers, settings, onNext, onB
   const [newPlayerName, setNewPlayerName] = useState('');
   const [draggedItemIndex, setDraggedItemIndex] = useState(null);
   const [botAverage, setBotAverage] = useState(40);
-  const [hasInitializedBot, setHasInitializedBot] = useState(false);
-
-  React.useEffect(() => {
-    if (settings && settings.mode === '1v1_bot' && players.length === 1 && !hasInitializedBot) {
-      setHasInitializedBot(true);
-      setPlayers([...players, { 
-        id: generateId(), 
-        name: `DartBot (avg: 40)`, 
-        isBot: true, 
-        botAverage: 40 
-      }]);
-    }
-  }, [settings, players, setPlayers, hasInitializedBot]);
 
   const handleAddPlayer = (e) => {
     e.preventDefault();
