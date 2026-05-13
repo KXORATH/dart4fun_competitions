@@ -1,7 +1,8 @@
 import React from 'react';
 import { Trophy, ArrowLeft } from 'lucide-react';
+import { getMatchupProbability } from '../lib/tournamentUtils';
 
-export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch, winner, onRematch, onBack, hideHeader }) {
+export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch, winner, onRematch, onBack, hideHeader, globalHistory = [], allMatches = [] }) {
   
   const isMultiGuest = (settings && settings.mode === 'multi_judge') && !isHost;
   
@@ -111,9 +112,25 @@ export default function KnockoutBracket({ matches, isHost, settings, onPlayMatch
                           Continue
                         </button>
                       ) : !m.isFinished && m.player1 && m.player2 && !m.player1.isPlaceholder && !m.player2.isPlaceholder && (
-                        <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                          Play Match
-                        </button>
+                        <>
+                          <button onClick={() => onPlayMatch(round.id, m.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                            Play Match
+                          </button>
+                          {(() => {
+                            const p1prob = getMatchupProbability(m.player1, m.player2, globalHistory, allMatches);
+                            const p2prob = 1 - p1prob;
+                            const getColor = (p) => p >= 0.6 ? 'var(--blue-color)' : (p >= 0.4 ? 'var(--warning-color)' : 'var(--danger-color)');
+                            return (
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                                <span>[</span>
+                                <span style={{ color: getColor(p1prob) }}>{Math.round(p1prob * 100)}%</span>
+                                <span>-</span>
+                                <span style={{ color: getColor(p2prob) }}>{Math.round(p2prob * 100)}%</span>
+                                <span>]</span>
+                              </div>
+                            );
+                          })()}
+                        </>
                       )}
                     </div>
                   )}

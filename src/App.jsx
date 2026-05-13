@@ -41,11 +41,14 @@ function App() {
   const setPhase = (newPhase) => updateState({ phase: newPhase });
 
   const handleGroupsCreated = (newGroups, initialMatches) => {
+    const N = newGroups.length;
     const advancingPlaceholders = [];
-    for(let i = 0; i < newGroups.length; i++) {
-        advancingPlaceholders.push({ isPlaceholder: true, name: `${newGroups[i].name}-1st`, groupId: newGroups[i].id, rank: 1 });
-        const nextGroupIndex = (i + 1) % newGroups.length;
-        advancingPlaceholders.push({ isPlaceholder: true, name: `${newGroups[nextGroupIndex].name}-2nd`, groupId: newGroups[nextGroupIndex].id, rank: 2 });
+    for(let i = 0; i < N; i++) {
+        const firstGroup = newGroups[i];
+        const secondGroupIndex = (N - 1 - i) % N;
+        const secondGroup = newGroups[secondGroupIndex];
+        advancingPlaceholders.push({ isPlaceholder: true, name: `${firstGroup.name}-1st`, groupId: firstGroup.id, rank: 1 });
+        advancingPlaceholders.push({ isPlaceholder: true, name: `${secondGroup.name}-2nd`, groupId: secondGroup.id, rank: 2 });
     }
     const initialKnockouts = generateKnockoutMatches(advancingPlaceholders);
     updateState({ groups: newGroups, groupMatches: initialMatches, knockouts: initialKnockouts, phase: PHASES.GROUP_STAGE });

@@ -33,6 +33,8 @@ export default function GroupMatches({ groups, groupMatches, isHost, settings, g
           winner={winner}
           onRematch={onRematch}
           onBack={() => setViewMode('groups')}
+          globalHistory={globalHistory}
+          allMatches={allMatches}
         />
       </div>
     );
