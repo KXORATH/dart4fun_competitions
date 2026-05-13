@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://KXORATH.github.io/dart4fun_competitions/",
+  "homepage": "https://dart4fun.pl",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node remove-crossorigin.js",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
