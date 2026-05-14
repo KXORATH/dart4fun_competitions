@@ -334,7 +334,18 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       
       msg.onend = () => {
           const nextPlayer = currentPlayer === 1 ? match.player2 : match.player1;
-          if (!nextPlayer.isBot && !wonLeg && nextPlayerRemainingScore <= 170 && nextPlayerRemainingScore > 1) {
+          // Only announce if the next player can actually finish in 3 darts
+          const canCheckout = (() => {
+            const s = nextPlayerRemainingScore;
+            if (s < 1) return false;
+            if (settings.checkoutType === 'double') {
+              const impossible = new Set([159, 162, 163, 165, 166, 168, 169]);
+              return s >= 2 && s <= 170 && !impossible.has(s);
+            } else {
+              return s >= 1 && s <= 180;
+            }
+          })();
+          if (!nextPlayer.isBot && !wonLeg && canCheckout) {
                const reqMsg = new SpeechSynthesisUtterance(`You require ${nextPlayerRemainingScore}`);
                reqMsg.lang = 'en-GB';
                window.speechSynthesis.speak(reqMsg);
