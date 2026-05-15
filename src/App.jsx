@@ -490,7 +490,7 @@ function App() {
           />
         )}
 
-        {phase === PHASES.GROUP_STAGE && (
+        {(phase === PHASES.GROUP_STAGE || phase === PHASES.KNOCKOUT_STAGE) && (
           <GroupMatches 
             groups={groups}
             groupMatches={groupMatches}
