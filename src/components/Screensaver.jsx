@@ -14,7 +14,9 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
             return s;
         }
 
-        if (phase === PHASES.KNOCKOUT_STAGE || (phase === PHASES.STATS_VIEW && knockouts && knockouts.length > 0)) {
+        const isGroupStageFinished = groups && groups.length > 0 && Object.values(groupMatches || {}).flat().every(m => m.isFinished);
+
+        if (phase === PHASES.KNOCKOUT_STAGE || (phase === PHASES.STATS_VIEW && knockouts && knockouts.length > 0) || isGroupStageFinished) {
             s.push({ type: 'KNOCKOUTS' });
             s.push({ type: 'STATS' });
         } else if (groups && groups.length > 0) {
@@ -27,7 +29,7 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
             s.push({ type: 'IDLE' });
         }
         return s;
-    }, [groups, phase, knockouts, settings]);
+    }, [groups, groupMatches, phase, knockouts, settings]);
 
     useEffect(() => {
         if (slides.length <= 1) return;
@@ -186,17 +188,17 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
-                        <Flame size={40} color="var(--warning-color)" style={{ margin: '0 auto 1rem auto' }} />
-                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 100+</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>{globalStats.most100plus.count || '0'}</div>
-                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.most100plus.player || 'None yet'}</div>
+                        <Flame size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem auto' }} />
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 80+</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--accent-color)', marginBottom: '0.5rem' }}>{globalStats.most80plus.count || '0'}</div>
+                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.most80plus.player || 'None yet'}</div>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
-                        <Star size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem auto' }} />
-                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 180s</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--accent-color)', marginBottom: '0.5rem' }}>{globalStats.most180s.count || '0'}</div>
-                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.most180s.player || 'None yet'}</div>
+                        <Star size={40} color="var(--warning-color)" style={{ margin: '0 auto 1rem auto' }} />
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 100+</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>{globalStats.most100plus.count || '0'}</div>
+                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.most100plus.player || 'None yet'}</div>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
