@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Trophy, Target, Activity } from 'lucide-react';
+import { X, Trophy, Target, Activity, Flame, Star } from 'lucide-react';
 import { calculateGroupStandings, calculateAdvancementOdds, calculateGlobalStats, getMatchupProbability } from '../lib/tournamentUtils';
 import { PHASES } from '../lib/useTournamentState';
 
@@ -169,27 +169,41 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
         return (
             <div className="glass-panel" style={{ width: '90%', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s' }}>
                 <h2 style={{ textAlign: 'center', fontSize: '3rem', marginBottom: '3rem', color: 'var(--accent-color)' }}>Tournament Leaders</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem' }}>
                     
-                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
-                        <Target size={48} color="var(--accent-color)" style={{ margin: '0 auto 1rem auto' }} />
-                        <h3 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Highest Checkout</h3>
-                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>{globalStats.highestCheckout.score || '-'}</div>
-                        <div style={{ fontSize: '1.2rem', color: 'var(--accent-color)' }}>{globalStats.highestCheckout.player || 'No checkouts yet'}</div>
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
+                        <Target size={40} color="var(--danger-color)" style={{ margin: '0 auto 1rem auto' }} />
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Highest Checkout</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--danger-color)', marginBottom: '0.5rem' }}>{globalStats.highestCheckout.score || '-'}</div>
+                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.highestCheckout.player || 'No checkouts yet'}</div>
                     </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
-                        <Trophy size={48} color="var(--warning-color)" style={{ margin: '0 auto 1rem auto' }} />
-                        <h3 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 60+</h3>
-                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>{globalStats.most60plus.count || '0'}</div>
-                        <div style={{ fontSize: '1.2rem', color: 'var(--warning-color)' }}>{globalStats.most60plus.player || 'None yet'}</div>
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
+                        <Trophy size={40} color="var(--blue-color)" style={{ margin: '0 auto 1rem auto' }} />
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 60+</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--blue-color)', marginBottom: '0.5rem' }}>{globalStats.most60plus.count || '0'}</div>
+                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.most60plus.player || 'None yet'}</div>
                     </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
-                        <Activity size={48} color="var(--success-color)" style={{ margin: '0 auto 1rem auto' }} />
-                        <h3 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Best Average</h3>
-                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>{globalStats.bestAverage.avg || '-'}</div>
-                        <div style={{ fontSize: '1.2rem', color: 'var(--success-color)' }}>{globalStats.bestAverage.player || 'Not enough data'}</div>
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
+                        <Flame size={40} color="var(--warning-color)" style={{ margin: '0 auto 1rem auto' }} />
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 100+</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>{globalStats.most100plus.count || '0'}</div>
+                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.most100plus.player || 'None yet'}</div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
+                        <Star size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem auto' }} />
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Most 180s</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--accent-color)', marginBottom: '0.5rem' }}>{globalStats.most180s.count || '0'}</div>
+                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.most180s.player || 'None yet'}</div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--panel-border)' }}>
+                        <Activity size={40} color="var(--success-color)" style={{ margin: '0 auto 1rem auto' }} />
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Best Average</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--success-color)', marginBottom: '0.5rem' }}>{globalStats.bestAverage.avg || '-'}</div>
+                        <div style={{ fontSize: '1rem', color: 'white' }}>{globalStats.bestAverage.player || 'Not enough data'}</div>
                     </div>
 
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Check, Delete, Undo, Eye, EyeOff, Keyboard } from 'lucide-react';
+import { ArrowLeft, Check, Delete, Undo, Eye, EyeOff, Keyboard, Activity, Target, History } from 'lucide-react';
 
 export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate, onBack }) {
   window.DEBUG_MATCH = window.DEBUG_MATCH || [];
@@ -702,17 +702,35 @@ export default function MatchView({ match, settings, onMatchFinish, onLiveUpdate
       </div>
 
       {/* Statistics under scoreboard */}
-      <div className="match-stats-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '0 1rem' }}>
-        <div style={{ textAlign: 'left', fontSize: '0.9rem' }}>
-          <div style={{ color: 'var(--text-secondary)' }}>3 dart average : {(calculateAverage(1) || 0).toFixed(2)}</div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Darts: <strong style={{ color: 'white' }}>{p1Darts}</strong></div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Last score: <span style={{ color: 'white' }}>{getLastScore(1)}</span></div>
+      <div className={`match-stats-row ${isSpectator ? 'spectator-stats' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '0 1rem' }}>
+        <div style={{ textAlign: 'left', fontSize: isSpectator ? '1.8rem' : '0.9rem', display: 'flex', flexDirection: 'column', gap: isSpectator ? '1rem' : '0.25rem' }}>
+          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {isSpectator && <Activity size={28} color="var(--accent-color)" />}
+            <span style={{opacity: isSpectator ? 0.7 : 1}}>3 dart average:</span> <strong style={{ color: 'white' }}>{(calculateAverage(1) || 0).toFixed(2)}</strong>
+          </div>
+          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {isSpectator && <Target size={28} color="var(--success-color)" />}
+            <span style={{opacity: isSpectator ? 0.7 : 1}}>Darts:</span> <strong style={{ color: 'white' }}>{p1Darts}</strong>
+          </div>
+          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {isSpectator && <History size={28} color="var(--danger-color)" />}
+            <span style={{opacity: isSpectator ? 0.7 : 1}}>Last score:</span> <strong style={{ color: 'white' }}>{getLastScore(1)}</strong>
+          </div>
         </div>
 
-        <div style={{ textAlign: 'right', fontSize: '0.9rem' }}>
-          <div style={{ color: 'var(--text-secondary)' }}>3 dart average : {(calculateAverage(2) || 0).toFixed(2)}</div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Darts: <strong style={{ color: 'white' }}>{p2Darts}</strong></div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Last score: <span style={{ color: 'white' }}>{getLastScore(2)}</span></div>
+        <div style={{ textAlign: 'right', fontSize: isSpectator ? '1.8rem' : '0.9rem', display: 'flex', flexDirection: 'column', gap: isSpectator ? '1rem' : '0.25rem', alignItems: 'flex-end' }}>
+          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <strong style={{ color: 'white' }}>{(calculateAverage(2) || 0).toFixed(2)}</strong> <span style={{opacity: isSpectator ? 0.7 : 1}}>:3 dart average</span>
+            {isSpectator && <Activity size={28} color="var(--accent-color)" />}
+          </div>
+          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
+             <strong style={{ color: 'white' }}>{p2Darts}</strong> <span style={{opacity: isSpectator ? 0.7 : 1}}>:Darts</span>
+             {isSpectator && <Target size={28} color="var(--success-color)" />}
+          </div>
+          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
+             <strong style={{ color: 'white' }}>{getLastScore(2)}</strong> <span style={{opacity: isSpectator ? 0.7 : 1}}>:Last score</span>
+             {isSpectator && <History size={28} color="var(--danger-color)" />}
+          </div>
         </div>
       </div>
 

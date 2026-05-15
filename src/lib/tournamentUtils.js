@@ -286,13 +286,15 @@ export function calculateAdvancementOdds(groupPlayers, groupMatches, numSimulati
 export function calculateGlobalStats(globalHistory, players) {
     let highestCheckout = { score: 0, player: null };
     let most60plus = { count: 0, player: null };
+    let most100plus = { count: 0, player: null };
+    let most180s = { count: 0, player: null };
     let bestAverage = { avg: 0, player: null };
     
-    if (!globalHistory || globalHistory.length === 0) return { highestCheckout, most60plus, bestAverage };
+    if (!globalHistory || globalHistory.length === 0) return { highestCheckout, most60plus, most100plus, most180s, bestAverage };
 
     const playerStats = {};
     players.forEach(p => {
-        playerStats[p.id] = { totalScore: 0, totalDarts: 0, count60plus: 0, name: p.name };
+        playerStats[p.id] = { totalScore: 0, totalDarts: 0, count60plus: 0, count100plus: 0, count180: 0, name: p.name };
     });
 
     globalHistory.forEach(h => {
@@ -305,8 +307,14 @@ export function calculateGlobalStats(globalHistory, players) {
         } else {
             if (!h.isBust) {
                 playerStats[h.playerId].totalScore += (h.score || 0);
-                if ((h.score || 0) >= 60) {
+                if ((h.score || 0) >= 60 && (h.score || 0) < 100) {
                     playerStats[h.playerId].count60plus++;
+                }
+                if ((h.score || 0) >= 100 && (h.score || 0) < 180) {
+                    playerStats[h.playerId].count100plus++;
+                }
+                if ((h.score || 0) === 180) {
+                    playerStats[h.playerId].count180++;
                 }
             }
             playerStats[h.playerId].totalDarts += (h.dartsThrown || 3);
@@ -315,6 +323,10 @@ export function calculateGlobalStats(globalHistory, players) {
 
     let max60plusCount = 0;
     let max60plusPlayer = null;
+    let max100plusCount = 0;
+    let max100plusPlayer = null;
+    let max180Count = 0;
+    let max180Player = null;
     let maxAvg = 0;
     let maxAvgPlayer = null;
 
@@ -323,6 +335,14 @@ export function calculateGlobalStats(globalHistory, players) {
         if (stats.count60plus > max60plusCount) {
             max60plusCount = stats.count60plus;
             max60plusPlayer = stats.name;
+        }
+        if (stats.count100plus > max100plusCount) {
+            max100plusCount = stats.count100plus;
+            max100plusPlayer = stats.name;
+        }
+        if (stats.count180 > max180Count) {
+            max180Count = stats.count180;
+            max180Player = stats.name;
         }
         
         if (stats.totalDarts > 0) {
@@ -335,7 +355,9 @@ export function calculateGlobalStats(globalHistory, players) {
     });
 
     if (max60plusCount > 0) most60plus = { count: max60plusCount, player: max60plusPlayer };
+    if (max100plusCount > 0) most100plus = { count: max100plusCount, player: max100plusPlayer };
+    if (max180Count > 0) most180s = { count: max180Count, player: max180Player };
     if (maxAvg > 0) bestAverage = { avg: maxAvg.toFixed(2), player: maxAvgPlayer };
 
-    return { highestCheckout, most60plus, bestAverage };
+    return { highestCheckout, most60plus, most100plus, most180s, bestAverage };
 }
