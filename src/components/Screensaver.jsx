@@ -14,16 +14,26 @@ export default function Screensaver({ players, groups, groupMatches, knockouts, 
             return s;
         }
 
-        const isGroupStageFinished = groups && groups.length > 0 && Object.values(groupMatches || {}).flat().every(m => m.isFinished);
+        const isGroupStageFinished = groups && groups.length > 0 && Object.values(groupMatches || {}).flat().length > 0 && Object.values(groupMatches || {}).flat().every(m => m.isFinished);
 
-        if (phase === PHASES.KNOCKOUT_STAGE || (phase === PHASES.STATS_VIEW && knockouts && knockouts.length > 0) || isGroupStageFinished) {
-            s.push({ type: 'KNOCKOUTS' });
+        if (isGroupStageFinished || phase === PHASES.KNOCKOUT_STAGE) {
+            if (knockouts && knockouts.length > 0) s.push({ type: 'KNOCKOUTS' });
             s.push({ type: 'STATS' });
         } else if (groups && groups.length > 0) {
+            let activeGroupsCount = 0;
             groups.forEach((g, idx) => {
-                s.push({ type: 'GROUP', groupIndex: idx });
+                const matches = groupMatches[g.id] || [];
+                const isGroupFinished = matches.length > 0 && matches.every(m => m.isFinished);
+                if (!isGroupFinished) {
+                    s.push({ type: 'GROUP', groupIndex: idx });
+                    activeGroupsCount++;
+                }
             });
-            s.push({ type: 'UPCOMING' });
+            if (activeGroupsCount === 0 && knockouts && knockouts.length > 0) {
+                s.push({ type: 'KNOCKOUTS' });
+            } else {
+                s.push({ type: 'UPCOMING' });
+            }
             s.push({ type: 'STATS' });
         } else {
             s.push({ type: 'IDLE' });
